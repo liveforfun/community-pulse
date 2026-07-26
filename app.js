@@ -298,19 +298,15 @@ function renderFeed() {
         .map((cluster, idx) => {
             const note = BASIS_NOTE[cluster.scoreBasis];
 
+            // 커뮤니티 태그는 카드 상단에 이미 있으므로 여기서는 제목과 원문 링크만 둔다
             const sources = cluster.items
-                .map(item => {
-                    const c = communityOf(item.community);
-                    return (
+                .map(
+                    item =>
                         '<a class="cluster-source" href="' + escapeHtml(item.url) + '" target="_blank" rel="noopener noreferrer">' +
-                        '<span class="community-badge" style="background:' + c.bgColor + ';color:' + c.color + '">' +
-                        escapeHtml(c.name) + '</span>' +
                         '<span class="cluster-source-title">' + escapeHtml(item.title) + '</span>' +
-                        '<span class="cluster-source-metrics">조회 ' + metric(item.views) + ' · 댓글 ' + metric(item.comments) + '</span>' +
                         '<span class="cluster-source-go">원문 ↗</span>' +
                         '</a>'
-                    );
-                })
+                )
                 .join('');
 
             const communityBadges = cluster.communities
@@ -330,23 +326,24 @@ function renderFeed() {
                 '</div>' +
                 '<h3 class="card-title">' + escapeHtml(cluster.title) + '</h3>' +
                 '<div class="card-communities">' + communityBadges + '</div>' +
-                // 지표는 접어서 공간을 확보한다. 다만 지표 결손 경고는 순위 해석에 필수이므로
-                // 접히지 않는 자리에 압축 형태로 항상 노출한다.
-                (note
-                    ? '<div class="basis-chip" title="' + escapeHtml(note) + '">' +
-                      '<span class="material-symbols-rounded">warning</span>' + escapeHtml(note) +
-                      '</div>'
-                    : '') +
+                // 지표와 지표 결손 경고를 모두 접기 안에 넣는다. 경고가 있는 카드는
+                // 요약줄에 작은 경고 아이콘을 남겨 펼칠 이유가 보이게 한다.
                 '<details class="metrics-toggle">' +
                 '<summary>' +
                 '<span class="material-symbols-rounded chevron">expand_more</span>' +
                 '<span class="summary-text">지표 보기</span>' +
+                (note ? '<span class="summary-warn material-symbols-rounded" title="' + escapeHtml(note) + '">warning</span>' : '') +
                 '<span class="summary-score">점수 ' + cluster.score.toLocaleString() + '</span>' +
                 '</summary>' +
+                '<div class="metrics-body">' +
                 '<div class="card-metrics">' +
                 '<div class="metric-box"><span class="metric-label">총 조회수</span><strong>' + metric(cluster.totalViews) + '</strong></div>' +
                 '<div class="metric-box"><span class="metric-label">총 댓글수</span><strong>' + metric(cluster.totalComments) + '</strong></div>' +
                 '<div class="metric-box"><span class="metric-label">점수</span><strong>' + cluster.score.toLocaleString() + '</strong></div>' +
+                '</div>' +
+                (note
+                    ? '<div class="basis-chip"><span class="material-symbols-rounded">warning</span>' + escapeHtml(note) + '</div>'
+                    : '') +
                 '</div>' +
                 '</details>' +
                 '<div class="cluster-sources">' +

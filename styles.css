@@ -1300,12 +1300,9 @@ body {
 
 .cluster-source {
     display: grid;
-    grid-template-columns: auto 1fr auto;
-    grid-template-areas:
-        "badge title go"
-        "badge metrics go";
+    grid-template-columns: 1fr auto;
     align-items: center;
-    gap: 3px 10px;
+    gap: 10px;
     padding: 9px 11px;
     background: rgba(15, 23, 42, 0.8);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -1321,23 +1318,13 @@ body {
     transform: translateX(2px);
 }
 
-.cluster-source .community-badge { grid-area: badge; }
-
 .cluster-source-title {
-    grid-area: title;
     font-size: 0.86rem;
     font-weight: 600;
     word-break: break-word;
 }
 
-.cluster-source-metrics {
-    grid-area: metrics;
-    font-size: 0.72rem;
-    color: #94a3b8;
-}
-
 .cluster-source-go {
-    grid-area: go;
     background: rgba(56, 189, 248, 0.18);
     color: #38bdf8;
     padding: 4px 10px;
@@ -1482,13 +1469,6 @@ body {
     .history-select { min-width: 0; width: 100%; }
     .timeline-row { grid-template-columns: 74px 1fr; }
     .timeline-meta { display: none; }
-    .cluster-source {
-        grid-template-columns: 1fr auto;
-        grid-template-areas:
-            "badge go"
-            "title title"
-            "metrics metrics";
-    }
 }
 
 /* --- 일별 요약 이력 --- */
@@ -1811,11 +1791,23 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
-.metrics-toggle .card-metrics {
-    margin-bottom: 0;
-    border-radius: 0 0 9px 9px;
+.metrics-body {
     border: 1px solid rgba(255, 255, 255, 0.07);
     border-top: none;
+    border-radius: 0 0 9px 9px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.metrics-toggle .card-metrics {
+    margin-bottom: 0;
+    border-radius: 7px;
+}
+
+/* 요약줄의 경고 아이콘 — 펼칠 이유가 있다는 신호 */
+.summary-warn {
+    font-size: 1rem;
+    color: #fbbf24;
 }
 
 /* 지표 결손 경고 — 접히지 않는 압축 칩 형태 (순위 오해 방지용이라 항상 보인다) */
@@ -1823,7 +1815,7 @@ body {
     display: flex;
     align-items: center;
     gap: 5px;
-    margin-bottom: 10px;
+    margin-top: 8px;
     padding: 5px 9px;
     border-radius: 7px;
     background: rgba(245, 158, 11, 0.1);
