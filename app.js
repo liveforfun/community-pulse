@@ -11,7 +11,8 @@ const COMMUNITY_CONFIG = {
     dc_realestate: { id: 'dc_realestate', name: '디시 부동산갤', color: '#b07ce0', bgColor: 'rgba(176,124,224,0.14)' }
 };
 
-const TOP_N = 3;
+const TOP_N = 3; // 30분 스냅샷·일별 요약 보기
+const WEEKLY_TOP_N = 10; // 7일 종합 보기 (기본)
 const SLOT_MINUTES = 30;
 
 const STATUS_LABEL = {
@@ -41,7 +42,10 @@ const BAR_TOP_N = 20;
 
 const state = {
     index: null,
+    // 화면에 보고 있는 데이터셋 (30분 스냅샷 / 일별 요약 / 7일 종합)
     snapshot: null,
+    // 항상 최신 스냅샷. 헤더의 수집 시각·카운트다운은 보고 있는 보기와 무관하게 이것을 쓴다
+    latest: null,
     keywords: null,
     keywordView: 'cloud',
     community: 'all',
@@ -127,7 +131,12 @@ function renderCommunityPills() {
 
     const counts = {};
     if (state.snapshot) {
-        state.snapshot.sources.forEach(s => { counts[s.id] = s.itemCount; });
+        // 30분 스냅샷은 그 시점 수집 건수, 기간 종합은 누적 건수를 보여준다
+        if (state.snapshot.sourceSummary) {
+            state.snapshot.sourceSummary.forEach(s => { counts[s.id] = s.itemCountTotal; });
+        } else {
+            state.snapshot.sources.forEach(s => { counts[s.id] = s.itemCount; });
+        }
     }
 
     const makePill = (id, label, count) => {
@@ -150,8 +159,8 @@ function renderCommunityPills() {
 function renderSourceStatus() {
     if (!state.snapshot) return;
 
-    // 일별 요약은 하루치 집계이므로 슬롯 단위 상태와 표기가 다르다
-    if (state.snapshot.isDaily) {
+    // 일별 요약·7일 종합은 기간 집계이므로 슬롯 단위 상태와 표기가 다르다
+    if (state.snapshot.isDaily || state.snapshot.isWeekly) {
         const chips = (state.snapshot.sourceSummary || []).map(s => {
             const total = s.okCount + s.emptyCount + s.blockedCount + s.errorCount;
             const cls = s.okCount === total ? 'ok' : s.okCount === 0 ? 'error' : 'warn';
@@ -164,13 +173,25 @@ function renderSourceStatus() {
             );
         });
 
+        const heading = state.snapshot.isWeekly
+            ? (state.snapshot.fromDay || '?') + ' ~ ' + (state.snapshot.toDay || '?') + ' 7일 종합'
+            : escapeHtml(state.snapshot.date) + ' 일별 요약';
+
         el.sourceStatus.innerHTML =
             '<div class="source-status-head">' +
             '<span class="material-symbols-rounded">calendar_month</span>' +
-            '<strong>' + escapeHtml(state.snapshot.date) + ' 일별 요약</strong>' +
-            '<span class="source-status-sum">' + state.snapshot.snapshotCount + '개 수집 집계</span>' +
+            '<strong>' + heading + '</strong>' +
+            '<span class="source-status-sum">' + state.snapshot.snapshotCount.toLocaleString() + '개 수집 집계</span>' +
             '</div>' +
-            '<div class="source-chips">' + chips.join('') + '</div>';
+            '<div class="source-chips">' + chips.join('') + '</div>' +
+            // 원본이 삭제된 날은 후보가 그날 TOP 3 로 제한된다 — 순위 해석에 영향이 있으므로 밝힌다
+            ((state.snapshot.partialDays || []).length > 0
+                ? '<div class="basis-warning" style="margin-top:12px;margin-bottom:0">' +
+                  '<span class="material-symbols-rounded">warning</span>' +
+                  '30분 원본이 삭제된 ' + state.snapshot.partialDays.length +
+                  '일은 일별 요약(그날 TOP 3)만 후보로 집계되었습니다' +
+                  '</div>'
+                : '');
         return;
     }
 
@@ -221,19 +242,30 @@ function selectClusters() {
         });
     }
 
-    return clusters.slice().sort((a, b) => b.score - a.score).slice(0, TOP_N);
+    const topN = state.snapshot.topN || TOP_N;
+    return clusters.slice().sort((a, b) => b.score - a.score).slice(0, topN);
 }
 
 function renderFeed() {
     const clusters = selectClusters();
+    const topN = state.snapshot ? state.snapshot.topN || TOP_N : TOP_N;
 
     const filterName =
         state.community === 'all' ? '전체 커뮤니티' : communityOf(state.community).name;
+    const periodName = state.snapshot && state.snapshot.isWeekly
+        ? '7일 종합'
+        : state.snapshot && state.snapshot.isDaily
+        ? '하루 종합'
+        : '이번 수집';
     el.activeFilterName.textContent =
-        filterName + ' · 조회수+댓글수 기준 TOP ' + TOP_N;
+        filterName + ' · ' + periodName + ' 조회수+댓글수 기준 TOP ' + topN;
 
     if (!state.snapshot) {
         el.newsTotalCount.textContent = '-';
+    } else if (state.snapshot.isWeekly) {
+        el.newsTotalCount.textContent =
+            '7일 누적 ' + state.snapshot.itemCount.toLocaleString() + '건 · 후보 ' +
+            state.snapshot.candidateCount.toLocaleString() + '개 중 최고 화제글';
     } else if (state.snapshot.isDaily) {
         el.newsTotalCount.textContent =
             '하루 누적 ' + state.snapshot.itemCount.toLocaleString() + '건 중 최고 화제글';
@@ -251,7 +283,9 @@ function renderFeed() {
         return;
     }
 
-    const medals = ['🥇 1위', '🥈 2위', '🥉 3위'];
+    // 4위 이하는 메달이 없으므로 숫자로 표기한다
+    const MEDALS = ['🥇 1위', '🥈 2위', '🥉 3위'];
+    const rankLabel = idx => MEDALS[idx] || idx + 1 + '위';
 
     el.newsGrid.innerHTML = clusters
         .map((cluster, idx) => {
@@ -282,8 +316,10 @@ function renderFeed() {
             return (
                 '<article class="news-card">' +
                 '<div class="card-rank-row">' +
-                '<span class="rank-medal">' + medals[idx] + '</span>' +
-                '<span class="card-group-count">유사글 ' + cluster.memberCount + '건 묶음</span>' +
+                '<span class="rank-medal' + (idx > 2 ? ' plain' : '') + '">' + rankLabel(idx) + '</span>' +
+                '<span class="card-group-count">' +
+                (cluster.peakSlot ? '최고 ' + formatSlot(cluster.peakSlot) + ' · ' : '') +
+                '유사글 ' + cluster.memberCount + '건 묶음</span>' +
                 '</div>' +
                 '<h3 class="card-title">' + escapeHtml(cluster.title) + '</h3>' +
                 '<div class="card-communities">' + communityBadges + '</div>' +
@@ -602,9 +638,16 @@ function renderSnapshotSelect() {
         )
         .join('');
 
+    const weeklyOption =
+        '<optgroup label="기간 종합">' +
+        '<option value="weekly"' + (state.snapshot && state.snapshot.isWeekly ? ' selected' : '') + '>' +
+        '7일 종합 TOP ' + WEEKLY_TOP_N +
+        '</option></optgroup>';
+
     el.snapshotSelect.innerHTML =
-        '<optgroup label="30분 단위 원본 (최근 ' + (state.index.retentionDays || 7) + '일)">' + slotOptions + '</optgroup>' +
-        (dayOptions ? '<optgroup label="일별 요약 (영구 보존)">' + dayOptions + '</optgroup>' : '');
+        weeklyOption +
+        '<optgroup label="30분 단위 원본 (최근 ' + (state.index.retentionDays || 7) + '일) · TOP ' + TOP_N + '">' + slotOptions + '</optgroup>' +
+        (dayOptions ? '<optgroup label="일별 요약 (영구 보존) · TOP ' + TOP_N + '">' + dayOptions + '</optgroup>' : '');
 }
 
 function renderTimeline() {
@@ -662,18 +705,11 @@ function renderTimeline() {
 // 따라서 "정확히 30분 후"를 약속하지 않고, 기록된 capturedAt 기준의 "예정" 시각으로 표기한다.
 
 function updateCountdown() {
-    if (!state.snapshot) return;
+    // 헤더의 수집 시각·카운트다운은 "수집이 얼마나 최신인가"를 알리는 정보이므로
+    // 어떤 보기를 보고 있든 항상 최신 스냅샷 기준으로 표시한다.
+    if (!state.latest) return;
 
-    // 일별 요약을 보고 있을 때는 다음 수집까지의 카운트다운이 의미가 없다
-    if (state.snapshot.isDaily) {
-        el.lastUpdatedTime.textContent =
-            state.snapshot.date + ' 하루치 요약 · ' + state.snapshot.snapshotCount + '회 수집분';
-        el.countdownDisplay.textContent = '요약';
-        el.timerProgressBar.style.width = '100%';
-        return;
-    }
-
-    const captured = new Date(state.snapshot.capturedAt);
+    const captured = new Date(state.latest.capturedAt);
     const elapsedMin = (Date.now() - captured.getTime()) / 60000;
 
     el.lastUpdatedTime.textContent =
@@ -703,6 +739,41 @@ async function loadSnapshot(path) {
         renderAll();
     } catch (err) {
         toast('스냅샷을 불러오지 못했습니다: ' + err.message);
+    }
+}
+
+/**
+ * 7일 종합 TOP 10 을 불러온다 (기본 보기).
+ * 30분 스냅샷과 형태가 다르므로 렌더 경로가 공유되도록 맞춰준다.
+ */
+async function loadWeekly() {
+    try {
+        const w = await fetchJson('data/weekly.json');
+        state.snapshot = {
+            isWeekly: true,
+            topN: WEEKLY_TOP_N,
+            slot: 'weekly',
+            fromDay: w.fromDay,
+            toDay: w.toDay,
+            capturedAt: w.generatedAt,
+            snapshotCount: w.snapshotCount,
+            itemCount: w.itemCountTotal,
+            candidateCount: w.candidateCount,
+            clusterCount: w.top.length,
+            partialDays: w.partialDays || [],
+            sourceSummary: w.sourceSummary,
+            sources: [],
+            clusters: w.top,
+            top: w.top
+        };
+        renderAll();
+    } catch (err) {
+        toast('7일 종합을 불러오지 못했습니다: ' + err.message);
+        // 7일 종합이 없으면 최신 스냅샷으로 물러난다
+        if (state.latest) {
+            state.snapshot = state.latest;
+            renderAll();
+        }
     }
 }
 
@@ -751,7 +822,7 @@ async function loadAll() {
             fetchJson('data/latest.json')
         ]);
         state.index = index;
-        state.snapshot = latest;
+        state.latest = latest;
 
         // 키워드 집계는 없어도 나머지 화면이 동작해야 한다
         try {
@@ -760,7 +831,8 @@ async function loadAll() {
             state.keywords = null;
         }
 
-        renderAll();
+        // 기본 보기는 7일 종합 TOP 10. 실패 시 loadWeekly 가 최신 스냅샷으로 물러난다.
+        await loadWeekly();
     } catch (err) {
         el.newsGrid.innerHTML =
             '<div class="empty-state">' +
@@ -779,14 +851,12 @@ async function loadAll() {
 function initApp() {
     el.refreshBtn.onclick = loadAll;
 
-    el.latestBtn.onclick = () => {
-        if (state.index && state.index.slots.length > 0) {
-            loadSnapshot(state.index.slots[0].path);
-        }
-    };
+    // 기본 보기(7일 종합)로 돌아가는 버튼
+    el.latestBtn.onclick = () => loadWeekly();
 
     el.snapshotSelect.onchange = e => {
         const value = e.target.value;
+        if (value === 'weekly') return loadWeekly();
         return value.indexOf('daily/') === 0 ? loadDaily(value) : loadSnapshot(value);
     };
 

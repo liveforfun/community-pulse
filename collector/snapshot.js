@@ -5,6 +5,7 @@ const path = require('path');
 
 const rollup = require('./rollup');
 const keywords = require('./keywords');
+const weekly = require('./weekly');
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const SNAPSHOT_DIR = path.join(DATA_DIR, 'snapshots');
@@ -129,13 +130,18 @@ function save(snapshot) {
     const keywordSummary = keywords.build(DATA_DIR, slot.day, keywords.WINDOW_DAYS);
     writeJson(path.join(DATA_DIR, 'keywords.json'), keywordSummary);
 
+    // 7일 종합 TOP 10 (프론트의 기본 보기)
+    const weeklySummary = weekly.build(DATA_DIR, slot.day, weekly.WINDOW_DAYS);
+    writeJson(path.join(DATA_DIR, 'weekly.json'), weeklySummary);
+
     return {
         slot,
         relPath,
         removedDays,
         keptWithoutRollup: pruned.keptWithoutRollup,
         createdRollups,
-        keywordSummary
+        keywordSummary,
+        weeklySummary
     };
 }
 

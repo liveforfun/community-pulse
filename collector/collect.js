@@ -157,6 +157,11 @@ async function main() {
     console.log('저장      : data/' + saved.relPath);
     console.log('키워드    : ' + saved.keywordSummary.keywordCount + '개 (' +
         saved.keywordSummary.daysUsed.length + '일 · 스냅샷 ' + saved.keywordSummary.snapshotCount + '건 집계)');
+    console.log('7일 종합  : 후보 ' + saved.weeklySummary.candidateCount + '개 → TOP ' +
+        saved.weeklySummary.top.length + ' (' + saved.weeklySummary.daysUsed.length + '일)' +
+        (saved.weeklySummary.partialDays.length > 0
+            ? ' · 원본 없는 날 ' + saved.weeklySummary.partialDays.length + '일은 후보 제한'
+            : ''));
     if (saved.createdRollups.length > 0) {
         console.log('일별요약  : ' + saved.createdRollups.join(', ') + ' 생성 (영구 보존)');
     }

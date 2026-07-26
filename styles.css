@@ -1751,3 +1751,9 @@ body {
     .viz-views { width: 100%; }
     .viz-view-btn { flex: 1; }
 }
+
+/* 4위 이하 순위 배지 — 메달이 없으므로 톤을 낮춘다 */
+.rank-medal.plain {
+    background: rgba(148, 163, 184, 0.16);
+    color: #cbd5e1;
+}
