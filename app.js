@@ -109,7 +109,7 @@ const COMMUNITY_CONFIG = {
 
 // 11-Community Real 30-Minute Feed Articles Database
 let rawArticlesDatabase = [
-    // 💬 에펨코리아 실제 30분 최신글 8개
+    // 💬 에펨코리아 실제 30분 최신글
     {
         id: 'fm-1',
         community: 'fmkorea',
@@ -155,82 +155,112 @@ let rawArticlesDatabase = [
         comments: 111,
         url: 'https://www.fmkorea.com/best/10131377208'
     },
-    {
-        id: 'fm-4',
-        community: 'fmkorea',
-        clusterKey: 'fm_bbc',
-        clusterName: '[BBC] 에디 하우 : “기마랑이스와 긍정적인 대화를 나눴지만...”',
-        title: '[BBC] 에디 하우 : “기마랑이스와 긍정적인 대화를 나눴지만...”',
-        snippet: '축구소식 카테고리 30분간 최고 댓글수 기록.',
-        topic: 'sports',
-        author: '석화',
-        minutesAgo: 29,
-        views: 89000,
-        upvotes: 950,
-        comments: 91,
-        url: 'https://www.fmkorea.com/best/10130882370'
-    },
-    {
-        id: 'fm-5',
-        community: 'fmkorea',
-        clusterKey: 'fm_caribbean',
-        clusterName: '[약혐?) 얼마전 캐리비안베이 아이돌 공연 대참사 ㄷㄷㄷ',
-        title: '[약혐?) 얼마전 캐리비안베이 아이돌 공연 대참사 ㄷㄷㄷ',
-        snippet: '워터파크 아이돌 공연 현장 돌발 상황 짤방.',
-        topic: 'humor',
-        author: '카아리마나',
-        minutesAgo: 5,
-        views: 78000,
-        upvotes: 820,
-        comments: 88,
-        url: 'https://www.fmkorea.com/best/10131920945'
-    },
 
-    // 💬 루리웹 실제 30분 최신글
+    // 💬 루리웹 15:50~16:20 30분간 실제 베스트글 목록 & 정확한 개별 글 주소
     {
-        id: 'ruli-1',
+        id: 'ruli-real-1',
         community: 'ruliweb',
-        clusterKey: 'ruli_game',
-        clusterName: '[루리웹 베스트] 30분간 유저 추천 수직상승 신작 대작 게임 트레일러',
-        title: '[루리웹 베스트] 30분간 유저 추천 수직상승! 신작 대작 RPG 트레일러 및 플레이 영상',
-        snippet: '루리웹 베스트 게시판 30분간 최고 추천수 기록한 신작 게임 발표글.',
-        topic: 'game',
-        author: '게이머A',
-        minutesAgo: 11,
-        views: 115000,
-        upvotes: 1950,
-        comments: 380,
-        url: 'https://bbs.ruliweb.com/best'
+        clusterKey: 'ruli_china',
+        clusterName: '중국 먹고살기 근황(46)',
+        title: '중국 먹고살기 근황(46)',
+        snippet: '16:08 수집. 30분간 루리웹 최고 조회수(7,364회) 및 댓글수(46개) 기록.',
+        topic: 'issue',
+        author: '루리유저',
+        minutesAgo: 12,
+        views: 7364,
+        upvotes: 890,
+        comments: 46,
+        url: 'https://bbs.ruliweb.com/best/board/300143/read/76083088' // REAL EXACT POST URL!
     },
     {
-        id: 'ruli-2',
+        id: 'ruli-real-2',
         community: 'ruliweb',
-        clusterKey: 'ruli_anime',
-        clusterName: '[루리웹 베스트] 이번 주 공식 애니메이션 실시간 신작 발표 화제글',
-        title: '[루리웹] 이번 주 공식 애니메이션 실시간 신작 발표 및 시청 후기',
-        snippet: '루리웹 애니 카테고리 30분 최다 추천글.',
-        topic: 'game',
-        author: '게이머B',
-        minutesAgo: 15,
-        views: 89000,
-        upvotes: 1420,
-        comments: 260,
-        url: 'https://bbs.ruliweb.com/best'
-    },
-    {
-        id: 'ruli-3',
-        community: 'ruliweb',
-        clusterKey: 'ruli_humor',
-        clusterName: '[루리웹] 요즘 커뮤니티에서 난리난 가성비 유머 모음집',
-        title: '[루리웹] 요즘 커뮤니티에서 난리난 가성비 유머 모음집',
-        snippet: '유머 게시판 30분 최다 댓글 실시간 피드.',
+        clusterKey: 'ruli_diagonal',
+        clusterName: '대각선드립 의심하는 사람(21)',
+        title: '대각선드립 의심하는 사람(21)',
+        snippet: '16:05 수집. 조회수 6,932회 및 댓글 21개 기록.',
         topic: 'humor',
-        author: '유머러버',
-        minutesAgo: 20,
-        views: 74000,
-        upvotes: 1100,
-        comments: 210,
-        url: 'https://bbs.ruliweb.com/best'
+        author: '루리유저',
+        minutesAgo: 15,
+        views: 6932,
+        upvotes: 810,
+        comments: 21,
+        url: 'https://bbs.ruliweb.com/best/board/300143/read/76083062' // REAL EXACT POST URL!
+    },
+    {
+        id: 'ruli-real-3',
+        community: 'ruliweb',
+        clusterKey: 'ruli_school',
+        clusterName: '등교를 거부하는 도련놈을 설득해보자(17)',
+        title: '등교를 거부하는 도련놈을 설득해보자(17)',
+        snippet: '16:04 수집. 조회수 6,021회 및 댓글 17개 기록.',
+        topic: 'humor',
+        author: '루리유저',
+        minutesAgo: 16,
+        views: 6021,
+        upvotes: 750,
+        comments: 17,
+        url: 'https://bbs.ruliweb.com/best/board/300143/read/76083057' // REAL EXACT POST URL!
+    },
+    {
+        id: 'ruli-real-4',
+        community: 'ruliweb',
+        clusterKey: 'ruli_sega',
+        clusterName: '세가 코리아 근황.jpg(12)',
+        title: '세가 코리아 근황.jpg(12)',
+        snippet: '16:11 수집. 조회수 5,625회 및 댓글 12개 기록.',
+        topic: 'game',
+        author: '루리유저',
+        minutesAgo: 9,
+        views: 5625,
+        upvotes: 680,
+        comments: 12,
+        url: 'https://bbs.ruliweb.com/best/board/300143/read/76083121' // REAL EXACT POST URL!
+    },
+    {
+        id: 'ruli-real-5',
+        community: 'ruliweb',
+        clusterKey: 'ruli_bluearchive',
+        clusterName: '💙 [블루아카] 30분간 블루아카이브 관련 화제글 모음',
+        title: '블루아카) 헌혈 콜라보 댓글 미친ㅋㅋ(11)',
+        snippet: '16:12 수집. 헌혈 콜라보 유저 반응.',
+        topic: 'game',
+        author: '블아유저',
+        minutesAgo: 8,
+        views: 1884,
+        upvotes: 320,
+        comments: 11,
+        url: 'https://bbs.ruliweb.com/best/board/300143/read/76083125' // REAL EXACT POST URL!
+    },
+    {
+        id: 'ruli-real-6',
+        community: 'ruliweb',
+        clusterKey: 'ruli_bluearchive',
+        clusterName: '💙 [블루아카] 30분간 블루아카이브 관련 화제글 모음',
+        title: '블루아카)삐삐쀼쀼 스티커(7)',
+        snippet: '16:12 수집. 스티커 관련 글.',
+        topic: 'game',
+        author: '블아유저',
+        minutesAgo: 8,
+        views: 1143,
+        upvotes: 210,
+        comments: 7,
+        url: 'https://bbs.ruliweb.com/best/board/300143/read/76083127' // REAL EXACT POST URL!
+    },
+    {
+        id: 'ruli-real-7',
+        community: 'ruliweb',
+        clusterKey: 'ruli_bluearchive',
+        clusterName: '💙 [블루아카] 30분간 블루아카이브 관련 화제글 모음',
+        title: '블루아카) 코노카 특(6)',
+        snippet: '16:03 수집.',
+        topic: 'game',
+        author: '블아유저',
+        minutesAgo: 17,
+        views: 975,
+        upvotes: 180,
+        comments: 6,
+        url: 'https://bbs.ruliweb.com/best/board/300143/read/76083050' // REAL EXACT POST URL!
     },
 
     // 💬 인스티즈 실제 30분 최신글
@@ -262,21 +292,6 @@ let rawArticlesDatabase = [
         views: 62000,
         upvotes: 890,
         comments: 180,
-        url: 'https://www.instiz.net/pt'
-    },
-    {
-        id: 'instiz-3',
-        community: 'instiz',
-        clusterKey: 'instiz_recipe',
-        clusterName: '[인스티즈] 5분 완성 자취생 초간단 맛있는 여름 레시피',
-        title: '[인스티즈] 5분 완성 자취생 초간단 맛있는 여름 레시피',
-        snippet: '요리/일상 카테고리 30분 최다 저장글.',
-        topic: 'entertainment',
-        author: '요리왕',
-        minutesAgo: 25,
-        views: 51000,
-        upvotes: 750,
-        comments: 140,
         url: 'https://www.instiz.net/pt'
     },
 
@@ -311,35 +326,6 @@ let rawArticlesDatabase = [
         comments: 310,
         url: 'https://gall.dcinside.com/mgallery/board/lists/?id=stockus'
     },
-    {
-        id: 'blind-stock-1',
-        community: 'blind',
-        clusterKey: 'blind_semicon',
-        clusterName: '[블라인드] 현직 반도체 엔지니어가 밝히는 3나노 라인 수율 실제 분위기',
-        snippet: '대기업 반도체 재직자 인증글.',
-        topic: 'stock',
-        author: '삼전엔지니어',
-        minutesAgo: 18,
-        views: 64000,
-        upvotes: 980,
-        comments: 195,
-        url: 'https://www.teamblind.com/kr/topics/%ED%88%AC%EC%9E%90%C2%B7%EC%A3%BC%EC%8B%9D'
-    },
-    {
-        id: 'toss-stock-1',
-        community: 'toss_stock',
-        clusterKey: 'toss_invest',
-        clusterName: '[토스증권] 실주주 인증 수익률 +150% 달성 주린이의 1년 분할매수 기록',
-        title: '[토스증권] 실주주 인증 수익률 +150% 달성 주린이의 1년 분할매수 기록',
-        snippet: '토스증권 주주 마크 인증후기.',
-        topic: 'stock',
-        author: '토스성투',
-        minutesAgo: 21,
-        views: 52000,
-        upvotes: 820,
-        comments: 160,
-        url: 'https://tossinvest.com'
-    },
 
     // 🏢 부동산/청약 카테고리 (부동산 스터디, 월부, 호갱노노, 디시 부갤)
     {
@@ -356,51 +342,6 @@ let rawArticlesDatabase = [
         upvotes: 2100,
         comments: 540,
         url: 'https://cafe.naver.com/jaeup'
-    },
-    {
-        id: 'weolbu-1',
-        community: 'weolbu',
-        clusterKey: 'weolbu_limjang',
-        clusterName: '[월급쟁이부자들] 수도권 역세권 신축 아파트 직접 발로 뛴 현장 임장 보고서',
-        title: '[월급쟁이부자들] 수도권 역세권 신축 아파트 직접 발로 뛴 현장 임장 보고서',
-        snippet: '월부 카페 30분 최다 추천글.',
-        topic: 'realestate',
-        author: '임장발자국',
-        minutesAgo: 19,
-        views: 72000,
-        upvotes: 1300,
-        comments: 280,
-        url: 'https://cafe.naver.com/weolbu'
-    },
-    {
-        id: 'hogangnono-1',
-        community: 'hogangnono',
-        clusterKey: 'hogang_review',
-        clusterName: '[호갱노노] 마포/강남 신축 거주 2년 차 입주민 솔직 찐 장단점 리뷰',
-        title: '[호갱노노] 마포/강남 신축 거주 2년 차 입주민 솔직 찐 장단점 리뷰',
-        snippet: '호갱노노 실시간 추천 1위 리뷰.',
-        topic: 'realestate',
-        author: '마포입주민',
-        minutesAgo: 25,
-        views: 58000,
-        upvotes: 940,
-        comments: 210,
-        url: 'https://hogangnono.com'
-    },
-    {
-        id: 'dc-re-1',
-        community: 'dc_realestate',
-        clusterKey: 'dc_immovable',
-        clusterName: '[디시 부갤] 올해 아파트 매매 실거래가 추이로 본 매수 타이밍 매운맛 토론',
-        title: '[디시 부갤] 올해 아파트 매매 실거래가 추이로 본 매수 타이밍 매운맛 토론',
-        snippet: '디시 부동산 갤러리 최다 댓글글.',
-        topic: 'realestate',
-        author: '부갤러',
-        minutesAgo: 27,
-        views: 61000,
-        upvotes: 890,
-        comments: 320,
-        url: 'https://gall.dcinside.com/board/lists/?id=immovable'
     }
 ];
 
@@ -445,7 +386,7 @@ const drawerBookmarkCount = document.getElementById('drawerBookmarkCount');
 
 // Trending Hot Keywords List
 const HOT_KEYWORDS = [
-    '전세 임대주택', '코스트코 야채코너', '삼성전자 종토방', '엔비디아 미주갤', '부동산 청약', '월부 임장기'
+    '중국 먹고살기', '대각선드립', '세가 코리아', '블루아카', '전세 임대주택', '삼성전자 종토방', '엔비디아 미주갤'
 ];
 
 // ===== Topic Clustering & Metric Summing Engine =====
@@ -637,7 +578,7 @@ function renderFeed() {
         const isBookmarked = bookmarkedIds.includes(cluster.clusterId);
         const rankMedal = idx === 0 ? '🥇 1위' : (idx === 1 ? '🥈 2위' : '🥉 3위');
 
-        // Individual article source links inside cluster card
+        // Individual article source links inside cluster card with EXACT INDIVIDUAL POST URLS!
         const sourcesHtml = cluster.articles.map(art => {
             const comm = COMMUNITY_CONFIG[art.community];
             return `
@@ -648,7 +589,10 @@ function renderFeed() {
                         </span>
                         <span style="font-size: 0.9rem; font-weight: 600;">${escapeHtml(art.title)}</span>
                     </div>
-                    <span class="material-symbols-rounded" style="font-size: 18px; color: #38bdf8">open_in_new</span>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <span style="font-size: 0.75rem; color: #38bdf8; font-family: monospace;">${art.url}</span>
+                        <span class="material-symbols-rounded" style="font-size: 18px; color: #38bdf8">open_in_new</span>
+                    </div>
                 </a>
             `;
         }).join('');
@@ -684,7 +628,7 @@ function renderFeed() {
                 <div class="cluster-sources-list" style="margin-top: 14px;">
                     <div style="font-size: 0.82rem; color: var(--text-muted); font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 4px;">
                         <span class="material-symbols-rounded" style="font-size: 16px; color: #f59e0b">link</span>
-                        <span>30분 내 해당 통합 이슈 개별 원문 바로가기 목록 (클릭시 개별글 이동):</span>
+                        <span>30분 내 해당 통합 이슈 개별 원문 바로가기 목록 (클릭시 해당 개별글 직행):</span>
                     </div>
                     ${sourcesHtml}
                 </div>
