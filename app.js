@@ -67,9 +67,9 @@ let rawArticlesDatabase = [
     { id: 'hg-3', community: 'hogangnono', clusterKey: 'hg_topic_3', clusterName: '[호갱노노 3위] 초품아 아파트 통학로 안전 문제', title: '초품아 아파트지만 통학로 안전 확인 필요', author: '학부모', minutesAgo: 22, views: 48000, upvotes: 600, comments: 130, url: 'https://hogangnono.com/apt/23D34/2/2' },
 
     // --- 디시 부동산갤 (3개) ---
-    { id: 'dr-1', community: 'dc_realestate', clusterKey: 'dr_topic_1', clusterName: '[디시 부갤 1위] 하반기 부동산 매수 타이밍 끝장 토론', title: '하반기 부동산 매수 타이밍 지금이냐 아니냐', author: '부갤러', minutesAgo: 6, views: 82000, upvotes: 1100, comments: 420, url: 'https://gall.dcinside.com/board/view/?id=immovable&no=6450624' },
-    { id: 'dr-2', community: 'dc_realestate', clusterKey: 'dr_topic_2', clusterName: '[디시 부갤 2위] 1기 신도시 재건축 선도지구 지정 썰', title: '1기 신도시 재건축 선도지구 지정 찌라시 푼다', author: '분당주민', minutesAgo: 13, views: 71000, upvotes: 950, comments: 340, url: 'https://gall.dcinside.com/board/view/?id=immovable&no=6450625' },
-    { id: 'dr-3', community: 'dc_realestate', clusterKey: 'dr_topic_3', clusterName: '[디시 부갤 3위] 지방 광역시 분양시장 미분양 사태', title: '지방 광역시 분양시장 악성 미분양 심각하네', author: '지방러', minutesAgo: 20, views: 60000, upvotes: 800, comments: 260, url: 'https://gall.dcinside.com/board/view/?id=immovable&no=6450626' }
+    { id: 'dr-1', community: 'dc_realestate', clusterKey: 'dr_topic_1', clusterName: '[디시 부갤 1위] 하반기 부동산 매수 타이밍 끝장 토론', title: '하반기 부동산 매수 타이밍 지금이냐 아니냐', author: '부갤러', minutesAgo: 6, views: 82000, upvotes: 1100, comments: 420, url: 'https://gall.dcinside.com/board/view/?id=immovables&no=6450624' },
+    { id: 'dr-2', community: 'dc_realestate', clusterKey: 'dr_topic_2', clusterName: '[디시 부갤 2위] 1기 신도시 재건축 선도지구 지정 썰', title: '1기 신도시 재건축 선도지구 지정 찌라시 푼다', author: '분당주민', minutesAgo: 13, views: 71000, upvotes: 950, comments: 340, url: 'https://gall.dcinside.com/board/view/?id=immovables&no=6450625' },
+    { id: 'dr-3', community: 'dc_realestate', clusterKey: 'dr_topic_3', clusterName: '[디시 부갤 3위] 지방 광역시 분양시장 미분양 사태', title: '지방 광역시 분양시장 악성 미분양 심각하네', author: '지방러', minutesAgo: 20, views: 60000, upvotes: 800, comments: 260, url: 'https://gall.dcinside.com/board/view/?id=immovables&no=6450626' }
 ];
 
 // App State
