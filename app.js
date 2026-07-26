@@ -17,9 +17,9 @@ const COMMUNITY_CONFIG = {
 // 100% 검증된 데이터베이스 (각 커뮤니티마다 정확히 3개 이상의 개별 토픽 배정 -> 무조건 TOP 3 보장)
 let rawArticlesDatabase = [
     // --- 에펨코리아 (3개) ---
-    { id: 'fm-1', community: 'fmkorea', clusterKey: 'fm_topic_1', clusterName: '[펨코 1위] 오늘자 역대급 해외축구 이적 소식', title: '오늘자 역대급 해외축구 이적 소식.jpg', author: '축구팬', minutesAgo: 5, views: 152000, upvotes: 1800, comments: 250, url: 'https://www.fmkorea.com/best/10131931915' },
-    { id: 'fm-2', community: 'fmkorea', clusterKey: 'fm_topic_2', clusterName: '[펨코 2위] 퇴근시간 지하철 레전드 빌런', title: '퇴근시간 지하철 레전드 빌런 등장', author: '유머왕', minutesAgo: 12, views: 120000, upvotes: 1200, comments: 190, url: 'https://www.fmkorea.com/best/10106274092' },
-    { id: 'fm-3', community: 'fmkorea', clusterKey: 'fm_topic_3', clusterName: '[펨코 3위] 백종원이 추천한 가성비 맛집', title: '백종원이 추천한 가성비 맛집 리스트', author: '먹방러', minutesAgo: 18, views: 98000, upvotes: 950, comments: 110, url: 'https://www.fmkorea.com/best/10131207128' },
+    { id: 'fm-1', community: 'fmkorea', clusterKey: 'fm_topic_1', clusterName: '[펨코 1위] 당사자 옆에서 뒷담화 레전드', title: '당사자 옆에서 뒷담화 레전드ㅋㅋㅋ.mp4', author: '축구팬', minutesAgo: 5, views: 152000, upvotes: 1800, comments: 250, url: 'https://www.fmkorea.com/best/10131931915' },
+    { id: 'fm-2', community: 'fmkorea', clusterKey: 'fm_topic_2', clusterName: '[펨코 2위] 당나라 국제성과 개방성의 한계', title: '당나라 국제성과 개방성의 한계-당은 항상 국제적...', author: '역사광', minutesAgo: 12, views: 120000, upvotes: 1200, comments: 190, url: 'https://www.fmkorea.com/best/10106274092' },
+    { id: 'fm-3', community: 'fmkorea', clusterKey: 'fm_topic_3', clusterName: '[펨코 3위] 넷플릭스 신작 드라마 정주행 후기', title: '넷플릭스 신작 드라마 정주행 달린 후기', author: '드라마덕후', minutesAgo: 18, views: 98000, upvotes: 950, comments: 110, url: 'https://www.fmkorea.com/best/10131207128' },
 
     // --- 루리웹 (3개) ---
     { id: 'rl-1', community: 'ruliweb', clusterKey: 'rl_topic_1', clusterName: '[루리웹 1위] 콘솔 게임 신작 발표 트레일러 반응', title: '콘솔 게임 신작 발표 트레일러', author: '게이머', minutesAgo: 7, views: 85000, upvotes: 800, comments: 180, url: 'https://bbs.ruliweb.com/best/board/300143/read/76059841' },
