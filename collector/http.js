@@ -54,8 +54,7 @@ function once(url, timeoutMs, redirectsLeft) {
                 const chunks = [];
                 res.on('data', chunk => chunks.push(chunk));
                 res.on('end', () => {
-                    // 현재 6개 소스는 전부 UTF-8 이다. (네이버 종토방을 euc-kr 로 오판했다가
-                    // charset=utf-8 확인으로 정정했다.) euc-kr 소스가 추가되면 여기서 분기한다.
+                    // 현재 5개 소스는 전부 UTF-8 이다. euc-kr 소스가 추가되면 여기서 분기한다.
                     const body = Buffer.concat(chunks).toString('utf8');
                     resolve({
                         ok: status >= 200 && status < 300,
