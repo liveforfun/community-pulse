@@ -230,8 +230,15 @@ function selectClusters() {
     let clusters = state.snapshot.clusters || [];
 
     if (state.community !== 'all') {
-        // 해당 커뮤니티의 글을 포함한 클러스터만
-        clusters = clusters.filter(c => c.communities.indexOf(state.community) !== -1);
+        // 기간 종합(7일·일별)은 전체 TOP N 만 들고 있으므로 그 안에서 걸러내면
+        // 상위권에 없는 커뮤니티가 0개로 비어버린다. 수집기가 미리 계산해 둔
+        // 커뮤니티별 순위를 쓴다.
+        if (state.snapshot.byCommunity) {
+            clusters = state.snapshot.byCommunity[state.community] || [];
+        } else {
+            // 30분 스냅샷은 전체 클러스터를 들고 있어 직접 걸러도 정확하다
+            clusters = clusters.filter(c => c.communities.indexOf(state.community) !== -1);
+        }
     }
 
     if (state.query) {
@@ -777,6 +784,7 @@ async function loadWeekly() {
             sourceSummary: w.sourceSummary,
             sources: [],
             clusters: w.top,
+            byCommunity: w.byCommunity || null,
             top: w.top
         };
         renderAll();
@@ -808,6 +816,7 @@ async function loadDaily(path) {
             sourceSummary: daily.sourceSummary,
             sources: [],
             clusters: daily.top,
+            byCommunity: daily.byCommunity || null,
             top: daily.top
         };
         renderAll();

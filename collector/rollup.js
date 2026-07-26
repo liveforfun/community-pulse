@@ -103,10 +103,22 @@ function buildDaily(dataDir, day) {
         });
     });
 
-    const top = Array.from(bestByTitle.values())
-        .sort((a, b) => b.score - a.score)
-        .slice(0, DAILY_TOP_N)
-        .map((c, i) => Object.assign({ rank: i + 1 }, c));
+    const ranked = Array.from(bestByTitle.values()).sort((a, b) => b.score - a.score);
+
+    const top = ranked.slice(0, DAILY_TOP_N).map((c, i) => Object.assign({ rank: i + 1 }, c));
+
+    // 커뮤니티별 TOP N 을 따로 계산한다(weekly.js 와 같은 이유 — 전체 TOP N 을 걸러내면
+    // 상위권에 없는 커뮤니티는 결과가 비어버린다).
+    const byCommunity = {};
+    ranked.forEach(c => {
+        (c.communities || []).forEach(id => {
+            if (!byCommunity[id]) byCommunity[id] = [];
+            if (byCommunity[id].length < DAILY_TOP_N) byCommunity[id].push(c);
+        });
+    });
+    Object.keys(byCommunity).forEach(id => {
+        byCommunity[id] = byCommunity[id].map((c, i) => Object.assign({ rank: i + 1 }, c));
+    });
 
     return {
         date: day,
@@ -116,6 +128,7 @@ function buildDaily(dataDir, day) {
         lastCapturedAt: slots.length ? slots[slots.length - 1].capturedAt : null,
         itemCountTotal,
         top,
+        byCommunity,
         slots,
         sourceSummary: Object.values(sourceAgg),
         // 원본이 삭제된 뒤에도 7일 키워드 집계에 참여할 수 있도록 하루치 합계를 보존한다.

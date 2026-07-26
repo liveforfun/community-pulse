@@ -149,6 +149,20 @@ function build(dataDir, todayDay, windowDays) {
 
     const ranked = Array.from(bestByTitle.values()).sort((a, b) => b.score - a.score);
 
+    // 커뮤니티별 TOP N 을 따로 계산한다.
+    // 전체 TOP N 만 저장하고 프론트에서 걸러내면, 전체 상위권에 그 커뮤니티 글이 적을 때
+    // 결과가 0~3개로 쪼그라든다(초기 구현의 버그). 후보 전체에서 커뮤니티별로 다시 뽑아야 한다.
+    const byCommunity = {};
+    ranked.forEach(c => {
+        (c.communities || []).forEach(id => {
+            if (!byCommunity[id]) byCommunity[id] = [];
+            if (byCommunity[id].length < TOP_N) byCommunity[id].push(c);
+        });
+    });
+    Object.keys(byCommunity).forEach(id => {
+        byCommunity[id] = byCommunity[id].map((c, i) => Object.assign({ rank: i + 1 }, c));
+    });
+
     return {
         kind: 'weekly',
         generatedAt: new Date().toISOString(),
@@ -162,6 +176,7 @@ function build(dataDir, todayDay, windowDays) {
         itemCountTotal,
         candidateCount: ranked.length,
         top: ranked.slice(0, TOP_N).map((c, i) => Object.assign({ rank: i + 1 }, c)),
+        byCommunity,
         sourceSummary: Object.values(sourceAgg)
     };
 }
