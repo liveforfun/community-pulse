@@ -419,11 +419,11 @@ function rampIndex(exposure, min, max) {
     return Math.max(0, Math.min(KEYWORD_RAMP.length - 1, idx));
 }
 
-/** 글자 크기: 면적이 값에 비례하도록 제곱근 스케일 */
-function cloudFontSize(exposure, min, max) {
-    if (max === min) return (CLOUD_MIN_FONT + CLOUD_MAX_FONT) / 2;
+/** 글자 크기: 면적이 값에 비례하도록 제곱근 스케일. 최대 크기는 컨테이너 폭에 맞춰 좁아진다. */
+function cloudFontSize(exposure, min, max, maxFont) {
+    if (max === min) return (CLOUD_MIN_FONT + maxFont) / 2;
     const t = Math.sqrt((exposure - min) / (max - min));
-    return CLOUD_MIN_FONT + t * (CLOUD_MAX_FONT - CLOUD_MIN_FONT);
+    return CLOUD_MIN_FONT + t * (maxFont - CLOUD_MIN_FONT);
 }
 
 function keywordTooltipText(k) {
@@ -446,7 +446,14 @@ function renderKeywordCloud() {
     const words = state.keywords.keywords;
     const box = el.keywordCloud;
     const width = box.clientWidth || 640;
-    const height = CLOUD_HEIGHT;
+
+    // 모바일 대응:
+    //  - 최대 글자 크기를 폭에 비례시킨다. 54px 고정이면 폭 390px 화면에서 긴 한글 단어가
+    //    컨테이너보다 넓어져 통째로 버려졌다(상위 키워드가 사라지는 원인).
+    //  - 좁은 화면은 세로를 늘려 배치 면적을 확보한다.
+    // 높이는 폭에 반비례하게 키운다(좁을수록 세로로 확보). 실측 배치율 기준으로 정한 값이다.
+    const height = width < 560 ? 660 : width < 1100 ? 520 : CLOUD_HEIGHT;
+    const maxFont = Math.max(28, Math.min(CLOUD_MAX_FONT, Math.round(width / 9)));
 
     if (words.length === 0) {
         box.innerHTML = '<div class="empty-state"><p>집계된 키워드가 없습니다.</p></div>';
@@ -466,12 +473,23 @@ function renderKeywordCloud() {
     const PAD = 5;
 
     words.forEach(k => {
-        const fontSize = cloudFontSize(k.exposure, min, max);
-        ctx.font = '700 ' + fontSize + 'px Pretendard, system-ui, sans-serif';
-        const textWidth = ctx.measureText(k.w).width;
+        let fontSize = cloudFontSize(k.exposure, min, max, maxFont);
+        const setFont = () => {
+            ctx.font = '700 ' + fontSize + 'px Pretendard, system-ui, sans-serif';
+            return ctx.measureText(k.w).width;
+        };
+
+        let textWidth = setFont();
+
+        // 컨테이너보다 넓으면 버리지 않고 들어갈 때까지 줄인다
+        while (textWidth + PAD * 2 > width && fontSize > CLOUD_MIN_FONT) {
+            fontSize = Math.max(CLOUD_MIN_FONT, fontSize - 2);
+            textWidth = setFont();
+        }
+
         const textHeight = fontSize * 1.18;
 
-        if (textWidth + PAD * 2 > width) return; // 컨테이너보다 넓은 단어는 배치 불가
+        if (textWidth + PAD * 2 > width) return; // 최소 크기로도 안 들어가면 포기
 
         let spot = null;
         // 나선을 촘촘히 돌며 빈 자리를 찾는다. 타원 비율을 컨테이너 종횡비에 맞춰
@@ -539,8 +557,11 @@ function renderKeywordCloud() {
 
     const dropped = words.length - rendered.length;
     el.keywordFootnote.textContent =
-        '노출량 = ' + state.keywords.exposureDefinition +
-        (dropped > 0 ? ' · 공간 부족으로 ' + dropped + '개 키워드는 표시되지 않았습니다(막대·표 보기에서 확인).' : '');
+        (dropped > 0
+            ? '화면 크기에 맞춰 상위 ' + rendered.length + '개만 표시했습니다. 나머지 ' + dropped +
+              '개는 막대·표 보기에서 볼 수 있습니다. '
+            : '키워드 ' + rendered.length + '개 전부 표시. ') +
+        '노출량 = ' + state.keywords.exposureDefinition;
 }
 
 function renderKeywordBar() {
