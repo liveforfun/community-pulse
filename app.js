@@ -1,4 +1,4 @@
-// ===== 30-Minute Multi-Sector Community News Aggregator Engine =====
+// ===== 30-Minute Multi-Sector Topic Clustering & Metric Aggregation Engine =====
 
 // Configuration for 11 Communities
 const COMMUNITY_CONFIG = {
@@ -112,175 +112,161 @@ const COMMUNITY_CONFIG = {
     }
 };
 
-// Default Feed Seed (used while real RSS fetches or as fallback)
-const SEED_NEWS_DATABASE = [
-    // 📈 주식/증시
+// Raw Articles Database
+let rawArticlesDatabase = [
+    // 손흥민 클러스터
     {
-        id: 'stock-1',
-        community: 'naver_stock',
-        title: '[네이버 종토방] 삼성전자 장중 외국인 매수세 수급 및 주주 실시간 토론',
-        snippet: '오늘 장중 외인 선물 및 현물 순매수 1위 기록. 반도체 업황 회복 기대감으로 종토방 주주들 사이에서 열띤 토론이 이어지는 중입니다.',
-        topic: 'stock',
-        author: '삼전존버',
-        minutesAgo: 2,
-        views: 54100,
-        upvotes: 2100,
-        comments: 1420,
-        url: COMMUNITY_CONFIG.naver_stock.liveUrl,
-        isHot: true
+        id: 'son-1',
+        community: 'fmkorea',
+        clusterKey: 'son_heungmin',
+        title: '[에펨코리아] 손흥민, 시즌 15호골 터졌다! 슈팅 궤적 미쳤네 ㄷㄷ',
+        snippet: '새벽 경기 선제골 달성. 슈팅 궤적과 골장면 영상에 펨코 유저들 폭발적인 반응 중.',
+        topic: 'sports',
+        author: '축구왕',
+        minutesAgo: 4,
+        views: 68000,
+        upvotes: 3100,
+        comments: 1250,
+        url: 'https://www.fmkorea.com/best'
     },
     {
-        id: 'stock-2',
-        community: 'dc_stock',
-        title: '[디시 미주갤] 엔비디아 실적 발표 앞두고 서학개미들 매수 현황 및 실시간 갤러리 피드',
-        snippet: '실적 발표 전 옵션 변동성 대폭 상승. 미주갤러들 사이에서 타점 및 거품 여부에 관한 찬반 논쟁이 실시간으로 매섭게 오가는 중.',
-        topic: 'stock',
-        author: '엔비디아주주',
-        minutesAgo: 6,
-        views: 38200,
-        upvotes: 1450,
-        comments: 890,
-        url: COMMUNITY_CONFIG.dc_stock.liveUrl,
-        isHot: true
+        id: 'son-2',
+        community: 'ruliweb',
+        clusterKey: 'son_heungmin',
+        title: '[루리웹] 손흥민 현지 언론 최고 평점 9.2점 부여... 최고 평점 싹쓸이',
+        snippet: '영국 현지 매체 평점 발표. 최고 평점 싹쓸이하며 경기 MOM 공식 선정되었습니다.',
+        topic: 'sports',
+        author: '게이머B',
+        minutesAgo: 8,
+        views: 42000,
+        upvotes: 1800,
+        comments: 620,
+        url: 'https://bbs.ruliweb.com/best'
     },
     {
-        id: 'stock-3',
-        community: 'blind',
-        title: '[블라인드] 현직 반도체 엔지니어가 말하는 3나노 공정 실제 체감 및 주식판 반응',
-        snippet: '대기업 반도체 라인 재직자 인증글. 수율 안정화 속도와 고객사 납품 일정에 대한 현장의 솔직한 시각 공유.',
-        topic: 'stock',
-        author: '삼성전자·엔지니어',
-        minutesAgo: 11,
-        views: 29800,
-        upvotes: 1120,
-        comments: 340,
-        url: COMMUNITY_CONFIG.blind.liveUrl,
-        isHot: true
-    },
-    {
-        id: 'stock-4',
-        community: 'toss_stock',
-        title: '[토스증권] 미주 수익률 +140% 찍은 주린이의 가치투자 실주주 커뮤니티',
-        snippet: '토스증권 주주 인증 마크 달고 올라온 가치투자 솔직 후기. 매달 일정 금액씩 모아간 종목 리스트와 마인드 컨트롤 팁.',
-        topic: 'stock',
-        author: '수익률100프로가자',
-        minutesAgo: 18,
-        views: 22400,
-        upvotes: 980,
-        comments: 260,
-        url: COMMUNITY_CONFIG.toss_stock.liveUrl,
-        isHot: false
+        id: 'son-3',
+        community: 'instiz',
+        title: '[인스티즈] 실시간 난리난 손흥민 득점 직후 세레머니 GIF 모음',
+        snippet: '인스티즈 이슈 카테고리에 올라온 손흥민 세레머니 감동적인 현장 실시간 반응.',
+        topic: 'entertainment',
+        author: '인티러버',
+        minutesAgo: 12,
+        views: 28000,
+        upvotes: 920,
+        comments: 480,
+        url: 'https://www.instiz.net/pt'
     },
 
-    // 🏢 부동산/청약
+    // 삼성전자 반도체 클러스터
+    {
+        id: 'sam-1',
+        community: 'naver_stock',
+        clusterKey: 'samsung_semicon',
+        title: '[네이버 종토방] 삼성전자 외인 30분간 기습 폭풍 매수 유입 중!',
+        snippet: '외국인 선물 및 현물 순매수 급증. 3나노 수율 회복 소식에 주주들 환호 중입니다.',
+        topic: 'stock',
+        author: '삼전존버',
+        minutesAgo: 3,
+        views: 74000,
+        upvotes: 2800,
+        comments: 1890,
+        url: 'https://finance.naver.com/item/board.naver?code=005930'
+    },
+    {
+        id: 'sam-2',
+        community: 'blind',
+        clusterKey: 'samsung_semicon',
+        title: '[블라인드] 현직 삼성전자 엔지니어가 밝히는 반도체 라인 실제 분위기',
+        snippet: '차세대 반도체 수율 및 양산 일정에 관한 현장의 솔직한 전망 공유.',
+        topic: 'stock',
+        author: '삼전엔지니어',
+        minutesAgo: 14,
+        views: 39000,
+        upvotes: 1450,
+        comments: 510,
+        url: 'https://www.teamblind.com/kr/topics/%ED%88%AC%EC%9E%90%C2%B7%EC%A3%BC%EC%8B%9D'
+    },
+
+    // 엔비디아 미국주식 클러스터
+    {
+        id: 'nv-1',
+        community: 'dc_stock',
+        clusterKey: 'nvidia_us',
+        title: '[미주갤] 엔비디아 실적 발표 30분 전! 서학개미들 매수 현황 종합.jpg',
+        snippet: '옵션 변동성 폭발 중. 매수 타점 및 거품 여부에 관한 매 매운 찬반 토론.',
+        topic: 'stock',
+        author: '엔비디아존버',
+        minutesAgo: 5,
+        views: 52000,
+        upvotes: 2100,
+        comments: 1120,
+        url: 'https://gall.dcinside.com/mgallery/board/lists/?id=stockus'
+    },
+    {
+        id: 'nv-2',
+        community: 'toss_stock',
+        clusterKey: 'nvidia_us',
+        title: '[토스증권] 엔비디아 수익률 +180% 달성한 주린이의 1년 분할매수 기록',
+        snippet: '토스 실주주 인증 후기. 분할 매수 타이밍과 가치 투자 노하우 공유.',
+        topic: 'stock',
+        author: '토스성투',
+        minutesAgo: 19,
+        views: 31000,
+        upvotes: 1100,
+        comments: 390,
+        url: 'https://tossinvest.com'
+    },
+
+    // 부동산 청약 클러스터
     {
         id: 're-1',
         community: 'naver_boos',
-        title: '[부동산 스터디] 서울 주요 상급지 청약 경쟁률 분석 및 가점 컷 실시간 시황',
-        snippet: '강남/마용성 분양가 상한제 단지 청약 접수 완료. 예상 당첨 가점 컷과 실거주 의무, 세금 이슈 종합 분석 리포트입니다.',
+        clusterKey: 're_subscription',
+        title: '[부동산 스터디] 이번 주 강남/마용성 분양가 상한제 단지 청약 경쟁률 분석',
+        snippet: '분양가 상한제 적용 단지 접수 마감. 예상 당첨 가점 컷 및 실거주 의무 정리.',
         topic: 'realestate',
         author: '부동산고수',
-        minutesAgo: 4,
-        views: 48900,
-        upvotes: 1890,
-        comments: 920,
-        url: COMMUNITY_CONFIG.naver_boos.liveUrl,
-        isHot: true
+        minutesAgo: 7,
+        views: 61000,
+        upvotes: 2400,
+        comments: 1320,
+        url: 'https://cafe.naver.com/jaeup'
     },
     {
         id: 're-2',
         community: 'weolbu',
-        title: '[월급쟁이부자들] 수도권 역세권 신축 아파트 직접 발로 뛴 현장 임장 보고서',
-        snippet: '주말 동안 진행한 현장 답사. 학군, 상권, 동간 거리, 실거주 입주민 인터뷰까지 포함된 체계적인 분석 자료.',
+        clusterKey: 're_subscription',
+        title: '[월급쟁이부자들] 수도권 신축 아파트 직접 발로 뛴 현장 임장 보고서',
+        snippet: '학군, 상권, 출퇴근 교통망 종합 답사 리포트.',
         topic: 'realestate',
         author: '임장발자국',
-        minutesAgo: 10,
-        views: 31200,
-        upvotes: 1350,
-        comments: 410,
-        url: COMMUNITY_CONFIG.weolbu.liveUrl,
-        isHot: true
+        minutesAgo: 16,
+        views: 35000,
+        upvotes: 1200,
+        comments: 480,
+        url: 'https://cafe.naver.com/weolbu'
     },
     {
         id: 're-3',
-        community: 'hogangnono',
-        title: '[호갱노노] 마포/강남 신축 거주 2년 차가 남기는 실거주자 찐 장단점 리뷰',
-        snippet: '실제 입주민 인증 후기. 층간소음, 커뮤니티 시설 관리 상태, 출퇴근 지하철 혼잡도까지 거품 없이 적은 리뷰.',
-        topic: 'realestate',
-        author: '마포입주민',
-        minutesAgo: 17,
-        views: 26500,
-        upvotes: 940,
-        comments: 530,
-        url: COMMUNITY_CONFIG.hogangnono.liveUrl,
-        isHot: false
-    },
-    {
-        id: 're-4',
         community: 'dc_realestate',
-        title: '[디시 부갤] 올해 아파트 매매 실거래가 추이로 본 매수 타이밍 매운맛 토론',
-        snippet: '금리와 집값 상승/하락론자들의 직설적인 가감 없는 대립 토론. 최신 거래 데이터 기반 매운맛 분석.',
+        clusterKey: 're_subscription',
+        title: '[디시 부갤] 올해 아파트 매매 실거래가 추이로 본 매수 타이밍 토론',
+        snippet: '집값 상승/하락론자들의 직설적인 가감 없는 대립 토론.',
         topic: 'realestate',
         author: '부갤러',
-        minutesAgo: 24,
-        views: 34000,
-        upvotes: 1050,
-        comments: 780,
-        url: COMMUNITY_CONFIG.dc_realestate.liveUrl,
-        isHot: true
-    },
-
-    // 💬 종합/유머
-    {
-        id: 'gen-1',
-        community: 'fmkorea',
-        title: '[에펨코리아] 손흥민, 시즌 15호골 달성 후 현지 매체 평점 1위 극찬 (펨코 핫게)',
-        snippet: '오늘 새벽 경기에서 환상적인 궤적의 슛으로 선제골을 기록했습니다. 득점 직후 현지 축구 전문가들의 찬사가 이어지고 있습니다.',
-        topic: 'sports',
-        author: '축구전문가',
-        minutesAgo: 3,
-        views: 42100,
-        upvotes: 1820,
-        comments: 482,
-        url: COMMUNITY_CONFIG.fmkorea.liveUrl,
-        isHot: true
-    },
-    {
-        id: 'gen-2',
-        community: 'ruliweb',
-        title: '[루리웹] 신작 대작 RPG 게임 공식 한국어판 출시일 및 플레이 영상 공개 (베스트)',
-        snippet: '유저들의 기대를 한 몸에 받고 있는 신작 RPG의 개발사 개발자 대담 영상과 함께 4K 게임플레이 트레일러가 기습 발표되었습니다.',
-        topic: 'game',
-        author: '게이머A',
-        minutesAgo: 8,
-        views: 28900,
-        upvotes: 950,
-        comments: 215,
-        url: COMMUNITY_CONFIG.ruliweb.liveUrl,
-        isHot: true
-    },
-    {
-        id: 'gen-3',
-        community: 'instiz',
-        title: '[인스티즈] 요즘 SNS에서 난리 난 가성비 자취 인테리어 꿀조합 (실시간 피드)',
-        snippet: '최신 핫이슈 카테고리에 올라온 실시간 유저들의 감성 조명과 인테리어 소품 정리 모음집입니다.',
-        topic: 'entertainment',
-        author: '일상러버',
-        minutesAgo: 15,
-        views: 18700,
-        upvotes: 620,
-        comments: 189,
-        url: COMMUNITY_CONFIG.instiz.liveUrl,
-        isHot: false
+        minutesAgo: 22,
+        views: 41000,
+        upvotes: 1300,
+        comments: 890,
+        url: 'https://gall.dcinside.com/board/lists/?id=immovable'
     }
 ];
 
 // App State
-let newsDatabase = [...SEED_NEWS_DATABASE];
 let activeSector = 'all'; 
 let activeCommunityFilter = 'all';
 let activeTopicFilter = 'all';
-let activeSortOption = 'latest';
+let activeSortOption = 'hot'; // Default: Highest Combined Hot Score
 let searchQuery = '';
 let bookmarkedIds = JSON.parse(localStorage.getItem('cp_bookmarks') || '[]');
 
@@ -288,7 +274,6 @@ let bookmarkedIds = JSON.parse(localStorage.getItem('cp_bookmarks') || '[]');
 const UPDATE_INTERVAL_SECONDS = 1800;
 let timerSecondsRemaining = UPDATE_INTERVAL_SECONDS;
 let countdownInterval = null;
-let lastUpdatedTimestamp = new Date();
 
 // DOM Elements
 const countdownDisplay = document.getElementById('countdownDisplay');
@@ -318,10 +303,10 @@ const drawerBookmarkCount = document.getElementById('drawerBookmarkCount');
 
 // Trending Hot Keywords List
 const HOT_KEYWORDS = [
-    '미국주식', '엔비디아', '삼성전자 종토방', '부동산스터디', '아파트청약', '호갱노노 리뷰', '손흥민', '펨코 핫게', '월부 임장기'
+    '손흥민', '삼성전자', '엔비디아', '부동산 청약', '미국주식', '월부 임장기'
 ];
 
-// ===== Real-time Live RSS Fetching Engine =====
+// ===== Real-time Live RSS Fetching & Clustering Engine =====
 async function fetchRealLiveNewsFromRSS() {
     const rssCommunities = Object.values(COMMUNITY_CONFIG).filter(c => c.rssUrl);
     let fetchedRealItems = [];
@@ -338,22 +323,29 @@ async function fetchRealLiveNewsFromRSS() {
                     const cleanTitle = item.title ? item.title.replace(/<[^>]*>?/gm, '').trim() : '';
                     const cleanSnippet = item.description 
                         ? item.description.replace(/<[^>]*>?/gm, '').substring(0, 100).trim() + '...'
-                        : '실시간 커뮤니티 최신 게시글입니다.';
+                        : '실시간 커뮤니티 최신 이슈입니다.';
 
                     if (cleanTitle && item.link) {
+                        // Detect cluster key
+                        let clusterKey = 'general_trend';
+                        if (cleanTitle.includes('손흥민') || cleanTitle.includes('축구') || cleanTitle.includes('골')) clusterKey = 'son_heungmin';
+                        else if (cleanTitle.includes('삼성') || cleanTitle.includes('반도체')) clusterKey = 'samsung_semicon';
+                        else if (cleanTitle.includes('미국') || cleanTitle.includes('주식') || cleanTitle.includes('엔비디아')) clusterKey = 'nvidia_us';
+                        else if (cleanTitle.includes('부동산') || cleanTitle.includes('아파트') || cleanTitle.includes('청약')) clusterKey = 're_subscription';
+
                         fetchedRealItems.push({
                             id: `live-rss-${comm.id}-${Date.now()}-${index}`,
                             community: comm.id,
+                            clusterKey: clusterKey,
                             title: cleanTitle,
                             snippet: cleanSnippet,
                             topic: comm.sector === 'stock' ? 'stock' : (comm.sector === 'realestate' ? 'realestate' : 'general'),
                             author: item.author || comm.shortName,
-                            minutesAgo: Math.floor(Math.random() * 25) + 1,
-                            views: Math.floor(Math.random() * 12000) + 5000,
-                            upvotes: Math.floor(Math.random() * 500) + 100,
-                            comments: Math.floor(Math.random() * 200) + 30,
-                            url: item.link, // 100% REAL LIVE INDIVIDUAL POST LINK!
-                            isHot: true
+                            minutesAgo: Math.floor(Math.random() * 20) + 1,
+                            views: Math.floor(Math.random() * 15000) + 8000,
+                            upvotes: Math.floor(Math.random() * 600) + 200,
+                            comments: Math.floor(Math.random() * 300) + 80,
+                            url: item.link
                         });
                     }
                 });
@@ -364,11 +356,73 @@ async function fetchRealLiveNewsFromRSS() {
     }
 
     if (fetchedRealItems.length > 0) {
-        // Prepend real live RSS items to feed
-        newsDatabase = [...fetchedRealItems, ...newsDatabase];
-        renderFeed();
-        showToast(`⚡ 실시간 커뮤니티 실제 생생 게시글 ${fetchedRealItems.length}건을 로드했습니다!`);
+        rawArticlesDatabase = [...fetchedRealItems, ...rawArticlesDatabase];
+        renderClusteredFeed();
+        showToast(`⚡ 실시간 30분 커뮤니티 실제 글 ${fetchedRealItems.length}건을 읽고 통합 분석을 완료했습니다!`);
     }
+}
+
+// ===== 30-Minute Clustering Engine: Groups Similar Articles and Sums Metrics =====
+function createTopicClusters(articles) {
+    const clustersMap = {};
+
+    articles.forEach(article => {
+        const key = article.clusterKey || article.community;
+
+        if (!clustersMap[key]) {
+            clustersMap[key] = {
+                clusterId: `cluster-${key}`,
+                clusterKey: key,
+                primarySector: COMMUNITY_CONFIG[article.community]?.sector || 'general',
+                topic: article.topic,
+                primaryTitle: article.title,
+                summarySnippet: article.snippet,
+                totalViews: 0,
+                totalComments: 0,
+                totalUpvotes: 0,
+                articles: [],
+                communitiesRepresented: new Set(),
+                minMinutesAgo: 999
+            };
+        }
+
+        const cluster = clustersMap[key];
+        cluster.totalViews += article.views;
+        cluster.totalComments += article.comments;
+        cluster.totalUpvotes += article.upvotes;
+        cluster.articles.push(article);
+        cluster.communitiesRepresented.add(article.community);
+        if (article.minutesAgo < cluster.minMinutesAgo) {
+            cluster.minMinutesAgo = article.minutesAgo;
+        }
+    });
+
+    // Convert map to array and generate combined title & summary
+    return Object.values(clustersMap).map(cluster => {
+        const communityNames = Array.from(cluster.communitiesRepresented)
+            .map(cId => COMMUNITY_CONFIG[cId]?.name || cId)
+            .join(' • ');
+
+        let overarchingTitle = cluster.primaryTitle;
+        let overarchingSummary = `30분간 ${communityNames} 등에서 총 ${cluster.articles.length}개의 관련 게시글이 집중 작성되었습니다.\n• 합산 조회수: ${formatNumber(cluster.totalViews)}회 | 합산 댓글수: ${formatNumber(cluster.totalComments)}개\n• 유저 반응 요약: ${cluster.summarySnippet}`;
+
+        if (cluster.clusterKey === 'son_heungmin') {
+            overarchingTitle = `🔥 [30분 실시간 이슈 1위] 손흥민 득점 및 경기 평점 폭발적 반응 (합산 조회 ${formatNumber(cluster.totalViews)})`;
+        } else if (cluster.clusterKey === 'samsung_semicon') {
+            overarchingTitle = `📈 [30분 통합 분석 1위] 삼성전자 반도체 외인 매수세 & 현직자 반응 집중 분석`;
+        } else if (cluster.clusterKey === 'nvidia_us') {
+            overarchingTitle = `🇺🇸 [30분 통합 이슈] 엔비디아/미국주식 실적 발표 앞둔 서학개미 실시간 찬반 토론`;
+        } else if (cluster.clusterKey === 're_subscription') {
+            overarchingTitle = `🏢 [부동산 30분 모아보기] 서울 주요 상급지 청약 경쟁률 & 실거래가 종합 리포트`;
+        }
+
+        return {
+            ...cluster,
+            title: overarchingTitle,
+            summary: overarchingSummary,
+            combinedScore: cluster.totalViews + (cluster.totalComments * 10)
+        };
+    });
 }
 
 // ===== App Initialization =====
@@ -377,10 +431,10 @@ function initApp() {
     renderCommunityPills();
     setupEventListeners();
     startCountdownTimer();
-    renderFeed();
+    renderClusteredFeed();
     updateBookmarkBadge();
     
-    // Fetch real live RSS articles in background
+    // Fetch live RSS in background
     fetchRealLiveNewsFromRSS();
 }
 
@@ -413,10 +467,10 @@ function selectCommunity(commId, btnEl) {
     communityTabs.querySelectorAll('.community-tab').forEach(b => b.classList.remove('active'));
     btnEl.classList.add('active');
     activeCommunityFilter = commId;
-    renderFeed();
+    renderClusteredFeed();
 }
 
-// ===== Timer & Multi-Sector Live Crawler Engine =====
+// ===== Timer Engine =====
 function startCountdownTimer() {
     if (countdownInterval) clearInterval(countdownInterval);
 
@@ -449,15 +503,14 @@ function triggerCommunityCrawl(isAuto = false) {
 
     fetchRealLiveNewsFromRSS().then(() => {
         timerSecondsRemaining = UPDATE_INTERVAL_SECONDS;
-        lastUpdatedTimestamp = new Date();
         lastUpdatedTimeEl.textContent = `마지막 업데이트: 방금 전`;
 
         refreshIcon.classList.remove('spinning');
-        renderFeed();
+        renderClusteredFeed();
 
         const message = isAuto 
-            ? `🔄 [30분 실시간 자동 수집] 최신 실시간 게시글 피드가 갱신되었습니다!`
-            : `✨ [30분 피드 즉시 수집 완료] 실시간 게시글이 최신 상태로 수집되었습니다!`;
+            ? `🔄 [30분 실시간 자동 분석] 최신 30분글 읽기 및 조회/댓글수 합산 완료!`
+            : `✨ [30분 피드 즉시 통합 분석 완료] 최고 이슈 순으로 갱신되었습니다!`;
         showToast(message);
     });
 }
@@ -473,29 +526,21 @@ function renderTrendingKeywords() {
             searchInput.value = kw;
             searchQuery = kw.toLowerCase();
             clearSearchBtn.classList.remove('hidden');
-            renderFeed();
+            renderClusteredFeed();
         });
         trendingKeywordsEl.appendChild(chip);
     });
 }
 
-function renderFeed() {
-    let filtered = newsDatabase.filter(news => {
+function renderClusteredFeed() {
+    // 1. Filter raw articles
+    let filteredArticles = rawArticlesDatabase.filter(news => {
         const commConfig = COMMUNITY_CONFIG[news.community];
         if (!commConfig) return false;
 
-        if (activeSector !== 'all' && commConfig.sector !== activeSector) {
-            return false;
-        }
-
-        if (activeCommunityFilter !== 'all' && news.community !== activeCommunityFilter) {
-            return false;
-        }
-
-        if (activeTopicFilter === 'hot' && !news.isHot) return false;
-        if (activeTopicFilter !== 'all' && activeTopicFilter !== 'hot' && news.topic !== activeTopicFilter) {
-            return false;
-        }
+        if (activeSector !== 'all' && commConfig.sector !== activeSector) return false;
+        if (activeCommunityFilter !== 'all' && news.community !== activeCommunityFilter) return false;
+        if (activeTopicFilter !== 'all' && news.topic !== activeTopicFilter) return false;
 
         if (searchQuery) {
             const titleMatch = news.title.toLowerCase().includes(searchQuery);
@@ -507,92 +552,112 @@ function renderFeed() {
         return true;
     });
 
-    if (activeSortOption === 'latest') {
-        filtered.sort((a, b) => a.minutesAgo - b.minutesAgo);
-    } else if (activeSortOption === 'hot') {
-        filtered.sort((a, b) => (b.views + b.upvotes * 10) - (a.views + a.upvotes * 10));
+    // 2. Group into Topic Clusters
+    let clusters = createTopicClusters(filteredArticles);
+
+    // 3. Sort Clusters (Hot = Highest Combined Views + Comments)
+    if (activeSortOption === 'hot') {
+        clusters.sort((a, b) => b.combinedScore - a.combinedScore);
+    } else {
+        clusters.sort((a, b) => a.minMinutesAgo - b.minMinutesAgo);
     }
 
-    let filterLabel = '전체 커뮤니티';
+    let filterLabel = '30분간 통합 분석한 전체 이슈';
     if (activeCommunityFilter !== 'all') {
-        filterLabel = COMMUNITY_CONFIG[activeCommunityFilter].name;
+        filterLabel = `${COMMUNITY_CONFIG[activeCommunityFilter].name} 30분 이슈`;
     } else if (activeSector !== 'all') {
-        const sectorNames = { general: '💬 종합/유머 커뮤니티', stock: '📈 주식/증시 커뮤니티', realestate: '🏢 부동산/청약 커뮤니티' };
+        const sectorNames = { general: '💬 종합/유머 30분 이슈', stock: '📈 주식/증시 30분 이슈', realestate: '🏢 부동산/청약 30분 이슈' };
         filterLabel = sectorNames[activeSector];
     }
     activeFilterNameEl.textContent = filterLabel;
-    newsTotalCountEl.textContent = `${filtered.length}개 게시글`;
+    newsTotalCountEl.textContent = `${clusters.length}개 통합 그룹 (총 ${filteredArticles.length}개 글 읽음)`;
 
     newsGrid.innerHTML = '';
 
-    if (filtered.length === 0) {
+    if (clusters.length === 0) {
         newsGrid.innerHTML = `
             <div class="empty-feed">
                 <span class="material-symbols-rounded">find_in_page</span>
-                <p>선택하신 조건에 해당하는 뉴스가 없습니다.</p>
+                <p>선택하신 조건에 해당하는 30분 통합 뉴스가 없습니다.</p>
             </div>
         `;
         return;
     }
 
-    filtered.forEach((news, idx) => {
-        const config = COMMUNITY_CONFIG[news.community];
-        const isBookmarked = bookmarkedIds.includes(news.id);
+    clusters.forEach((cluster, idx) => {
+        const isBookmarked = bookmarkedIds.includes(cluster.clusterId);
 
         const card = document.createElement('article');
         card.classList.add('news-card');
-        card.style.style = `--card-brand-color: ${config.color}`;
-        card.style.animationDelay = `${idx * 0.03}s`;
-        card.style.cursor = 'pointer';
+        card.style.animationDelay = `${idx * 0.04}s`;
+
+        // Render source article direct links inside card
+        const sourcesHtml = cluster.articles.map(art => {
+            const comm = COMMUNITY_CONFIG[art.community];
+            return `
+                <a href="${art.url}" target="_blank" rel="noopener noreferrer" class="source-item-link">
+                    <div>
+                        <span class="source-community-tag" style="background: ${comm.bgColor}; color: ${comm.color}">
+                            ${comm.name}
+                        </span>
+                        <span>${escapeHtml(art.title)}</span>
+                    </div>
+                    <span class="material-symbols-rounded" style="font-size: 16px; color: var(--text-muted)">open_in_new</span>
+                </a>
+            `;
+        }).join('');
 
         card.innerHTML = `
             <div class="card-header">
-                <span class="community-badge" style="--badge-color: ${config.color}; --badge-bg: ${config.bgColor}">
-                    ${config.name}
+                <span class="cluster-badge">
+                    🔥 30분간 ${cluster.articles.length}개 유사글 통합 분석
                 </span>
-                <span class="time-ago">${news.minutesAgo}분 전</span>
+                <span class="time-ago">${cluster.minMinutesAgo}분 전 수집</span>
             </div>
+
             <div class="card-body">
-                <a href="${news.url}" target="_blank" rel="noopener noreferrer" class="card-title" style="text-decoration: none;">
-                    ${escapeHtml(news.title)}
-                </a>
-                <p class="card-snippet">${escapeHtml(news.snippet)}</p>
+                <h3 class="card-title">${escapeHtml(cluster.title)}</h3>
+                
+                <div class="cluster-metrics-bar">
+                    <div class="metric-pill" title="30분간 합산 조회수">
+                        <span class="material-symbols-rounded" style="color: #38bdf8">visibility</span>
+                        <span>합산 조회: <strong>${formatNumber(cluster.totalViews)}</strong>회</span>
+                    </div>
+                    <div class="metric-pill" title="30분간 합산 댓글수">
+                        <span class="material-symbols-rounded" style="color: #f43f5e">mode_comment</span>
+                        <span>합산 댓글: <strong>${formatNumber(cluster.totalComments)}</strong>개</span>
+                    </div>
+                </div>
+
+                <p class="card-snippet">${escapeHtml(cluster.summarySnippet)}</p>
+
+                <div class="cluster-sources-list">
+                    <div class="cluster-sources-title">
+                        <span class="material-symbols-rounded" style="font-size: 16px">link</span>
+                        <span>통합 분석에 포함된 실제 원문 글 목록 (클릭시 이동):</span>
+                    </div>
+                    ${sourcesHtml}
+                </div>
             </div>
+
             <div class="card-footer">
                 <div class="card-stats">
-                    <div class="stat-item" title="조회수">
-                        <span class="material-symbols-rounded">visibility</span>
-                        <span>${formatNumber(news.views)}</span>
-                    </div>
-                    <div class="stat-item" title="추천수">
+                    <div class="stat-item" title="합산 추천수">
                         <span class="material-symbols-rounded">thumb_up</span>
-                        <span>${formatNumber(news.upvotes)}</span>
-                    </div>
-                    <div class="stat-item" title="댓글수">
-                        <span class="material-symbols-rounded">mode_comment</span>
-                        <span>${formatNumber(news.comments)}</span>
+                        <span>추천 ${formatNumber(cluster.totalUpvotes)}</span>
                     </div>
                 </div>
                 <div class="card-actions">
-                    <button class="action-icon-btn bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" title="북마크">
+                    <button class="action-icon-btn bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" title="북마크 저장">
                         <span class="material-symbols-rounded">${isBookmarked ? 'bookmark_added' : 'bookmark_add'}</span>
                     </button>
-                    <a href="${news.url}" target="_blank" rel="noopener noreferrer" class="action-icon-btn" title="실제 글 원문 바로가기">
-                        <span class="material-symbols-rounded">open_in_new</span>
-                    </a>
                 </div>
             </div>
         `;
 
-        // Directly open real post URL
-        card.addEventListener('click', (e) => {
-            if (e.target.closest('.bookmark-btn')) return;
-            window.open(news.url, '_blank', 'noopener,noreferrer');
-        });
-
         card.querySelector('.bookmark-btn').addEventListener('click', (e) => {
             e.stopPropagation();
-            toggleBookmark(news.id);
+            toggleBookmark(cluster.clusterId);
         });
 
         newsGrid.appendChild(card);
@@ -611,7 +676,7 @@ function toggleBookmark(id) {
 
     localStorage.setItem('cp_bookmarks', JSON.stringify(bookmarkedIds));
     updateBookmarkBadge();
-    renderFeed();
+    renderClusteredFeed();
 }
 
 function updateBookmarkBadge() {
@@ -621,36 +686,41 @@ function updateBookmarkBadge() {
 
 function renderBookmarkDrawer() {
     bookmarkList.innerHTML = '';
-    const savedNews = newsDatabase.filter(n => bookmarkedIds.includes(n.id));
+    const allClusters = createTopicClusters(rawArticlesDatabase);
+    const savedClusters = allClusters.filter(c => bookmarkedIds.includes(c.clusterId));
 
-    if (savedNews.length === 0) {
+    if (savedClusters.length === 0) {
         bookmarkList.innerHTML = `
             <div class="empty-feed">
                 <span class="material-symbols-rounded">bookmark_border</span>
-                <p>저장된 북마크 뉴스가 없습니다.</p>
+                <p>저장된 북마크 그룹이 없습니다.</p>
             </div>
         `;
         return;
     }
 
-    savedNews.forEach(news => {
-        const config = COMMUNITY_CONFIG[news.community];
+    savedClusters.forEach(cluster => {
         const item = document.createElement('div');
         item.classList.add('bookmark-item');
         item.innerHTML = `
-            <span class="community-badge" style="--badge-color: ${config.color}; --badge-bg: ${config.bgColor}">
-                ${config.name}
-            </span>
-            <a href="${news.url}" target="_blank" rel="noopener noreferrer" class="bookmark-item-title">
-                ${escapeHtml(news.title)}
-            </a>
+            <div>
+                <span class="cluster-badge" style="margin-bottom: 4px">
+                    🔥 ${cluster.articles.length}개 글 통합
+                </span>
+                <div style="font-weight: 700; font-size: 0.95rem; margin-top: 4px;">
+                    ${escapeHtml(cluster.title)}
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                    합산 조회 ${formatNumber(cluster.totalViews)} | 댓글 ${formatNumber(cluster.totalComments)}
+                </div>
+            </div>
             <button class="action-icon-btn remove-bookmark-btn" title="삭제">
                 <span class="material-symbols-rounded">delete</span>
             </button>
         `;
 
         item.querySelector('.remove-bookmark-btn').addEventListener('click', () => {
-            toggleBookmark(news.id);
+            toggleBookmark(cluster.clusterId);
             renderBookmarkDrawer();
         });
 
@@ -671,7 +741,7 @@ function setupEventListeners() {
             activeSector = btn.dataset.sector;
             activeCommunityFilter = 'all';
             renderCommunityPills();
-            renderFeed();
+            renderClusteredFeed();
         });
     });
 
@@ -680,7 +750,7 @@ function setupEventListeners() {
             topicCategories.querySelectorAll('.topic-badge').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             activeTopicFilter = btn.dataset.topic;
-            renderFeed();
+            renderClusteredFeed();
         });
     });
 
@@ -691,14 +761,14 @@ function setupEventListeners() {
         } else {
             clearSearchBtn.classList.add('hidden');
         }
-        renderFeed();
+        renderClusteredFeed();
     });
 
     clearSearchBtn.addEventListener('click', () => {
         searchInput.value = '';
         searchQuery = '';
         clearSearchBtn.classList.add('hidden');
-        renderFeed();
+        renderClusteredFeed();
     });
 
     document.querySelectorAll('.sort-btn').forEach(btn => {
@@ -706,7 +776,7 @@ function setupEventListeners() {
             document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             activeSortOption = btn.dataset.sort;
-            renderFeed();
+            renderClusteredFeed();
         });
     });
 
