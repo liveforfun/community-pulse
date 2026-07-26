@@ -1,5 +1,7 @@
 # Community Pulse
 
+**라이브: https://comm.power-worker.com**
+
 공개 접근이 가능한 커뮤니티 게시판을 **30분마다 수집**해, **유사한 제목의 글을 하나의 그룹으로 묶고**, **조회수+댓글수 기준 TOP 3**를 스냅샷으로 **누적 기록**하는 정적 대시보드.
 
 수집기는 GitHub Actions cron 이 실행하고, 결과 JSON 을 저장소에 커밋한다. 프론트엔드는 빌드 없는 정적 HTML/CSS/JS 로 그 JSON 을 읽어 렌더한다. **외부 npm 의존성이 없다.**
