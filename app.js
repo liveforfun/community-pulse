@@ -7,6 +7,8 @@ const COMMUNITY_CONFIG = {
     fmkorea: { id: 'fmkorea', name: '에펨코리아', color: '#0055a6', bgColor: 'rgba(0,85,166,0.14)' },
     ruliweb: { id: 'ruliweb', name: '루리웹', color: '#4d8fd6', bgColor: 'rgba(77,143,214,0.14)' },
     instiz: { id: 'instiz', name: '인스티즈', color: '#2b963a', bgColor: 'rgba(43,150,58,0.14)' },
+    todayhumor: { id: 'todayhumor', name: '오늘의유머', color: '#e0824f', bgColor: 'rgba(224,130,79,0.14)' },
+    theqoo: { id: 'theqoo', name: '더쿠', color: '#d9628f', bgColor: 'rgba(217,98,143,0.14)' },
     dc_stock: { id: 'dc_stock', name: '디시 주식갤', color: '#6b7ce0', bgColor: 'rgba(107,124,224,0.14)' },
     dc_realestate: { id: 'dc_realestate', name: '디시 부동산갤', color: '#b07ce0', bgColor: 'rgba(176,124,224,0.14)' }
 };
