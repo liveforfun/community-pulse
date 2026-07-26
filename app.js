@@ -1,206 +1,452 @@
-// ===== Universal 11-Community 30-Minute Clustering & TOP 3 Ranking Engine =====
+// ===== Community Pulse — 수집된 스냅샷을 읽어 렌더한다 =====
+//
+// 이 파일은 데이터를 만들지 않는다. collector 가 저장한 data/*.json 만 읽는다.
+// 조회수·댓글수를 제공하지 않는 소스가 있으므로(null), 그 사실을 화면에 반드시 표시한다.
 
 const COMMUNITY_CONFIG = {
-    fmkorea: { id: 'fmkorea', name: '에펨코리아', color: '#0055a6', bgColor: 'rgba(0,85,166,0.1)' },
-    ruliweb: { id: 'ruliweb', name: '루리웹', color: '#1662ba', bgColor: 'rgba(22,98,186,0.1)' },
-    instiz: { id: 'instiz', name: '인스티즈', color: '#2b963a', bgColor: 'rgba(43,150,58,0.1)' },
-    naver_stock: { id: 'naver_stock', name: '네이버 종토방', color: '#03c75a', bgColor: 'rgba(3,199,90,0.1)' },
-    dc_stock: { id: 'dc_stock', name: '디시 주식/미주갤', color: '#3b4890', bgColor: 'rgba(59,72,144,0.1)' },
-    blind: { id: 'blind', name: '블라인드 주식', color: '#168aff', bgColor: 'rgba(22,138,255,0.1)' },
-    toss_stock: { id: 'toss_stock', name: '토스증권', color: '#0050ff', bgColor: 'rgba(0,80,255,0.1)' },
-    naver_boos: { id: 'naver_boos', name: '부동산 스터디', color: '#03c75a', bgColor: 'rgba(3,199,90,0.1)' },
-    weolbu: { id: 'weolbu', name: '월급쟁이부자들', color: '#ff6600', bgColor: 'rgba(255,102,0,0.1)' },
-    hogangnono: { id: 'hogangnono', name: '호갱노노', color: '#5b52ff', bgColor: 'rgba(91,82,255,0.1)' },
-    dc_realestate: { id: 'dc_realestate', name: '디시 부동산갤', color: '#3b4890', bgColor: 'rgba(59,72,144,0.1)' }
+    fmkorea: { id: 'fmkorea', name: '에펨코리아', color: '#0055a6', bgColor: 'rgba(0,85,166,0.14)' },
+    ruliweb: { id: 'ruliweb', name: '루리웹', color: '#4d8fd6', bgColor: 'rgba(77,143,214,0.14)' },
+    instiz: { id: 'instiz', name: '인스티즈', color: '#2b963a', bgColor: 'rgba(43,150,58,0.14)' },
+    naver_stock: { id: 'naver_stock', name: '네이버 종토방', color: '#03c75a', bgColor: 'rgba(3,199,90,0.14)' },
+    dc_stock: { id: 'dc_stock', name: '디시 주식갤', color: '#6b7ce0', bgColor: 'rgba(107,124,224,0.14)' },
+    dc_realestate: { id: 'dc_realestate', name: '디시 부동산갤', color: '#b07ce0', bgColor: 'rgba(176,124,224,0.14)' }
 };
 
-// 100% 검증된 데이터베이스 (각 커뮤니티마다 정확히 3개 이상의 개별 토픽 배정 -> 무조건 TOP 3 보장)
-let rawArticlesDatabase = [
-    // --- 에펨코리아 (3개) ---
-    { id: 'fm-1', community: 'fmkorea', clusterKey: 'fm_topic_1', clusterName: '[펨코 1위] 당사자 옆에서 뒷담화 레전드', title: '당사자 옆에서 뒷담화 레전드ㅋㅋㅋ.mp4', author: '축구팬', minutesAgo: 5, views: 152000, upvotes: 1800, comments: 250, url: 'https://www.fmkorea.com/best/10131931915' },
-    { id: 'fm-2', community: 'fmkorea', clusterKey: 'fm_topic_2', clusterName: '[펨코 2위] 당나라 국제성과 개방성의 한계', title: '당나라 국제성과 개방성의 한계-당은 항상 국제적...', author: '역사광', minutesAgo: 12, views: 120000, upvotes: 1200, comments: 190, url: 'https://www.fmkorea.com/best/10106274092' },
-    { id: 'fm-3', community: 'fmkorea', clusterKey: 'fm_topic_3', clusterName: '[펨코 3위] 넷플릭스 신작 드라마 정주행 후기', title: '넷플릭스 신작 드라마 정주행 달린 후기', author: '드라마덕후', minutesAgo: 18, views: 98000, upvotes: 950, comments: 110, url: 'https://www.fmkorea.com/best/10131207128' },
+const TOP_N = 3;
+const SLOT_MINUTES = 30;
 
-    // --- 루리웹 (3개) ---
-    { id: 'rl-1', community: 'ruliweb', clusterKey: 'rl_topic_1', clusterName: '[루리웹 1위] 콘솔 게임 신작 발표 트레일러 반응', title: '콘솔 게임 신작 발표 트레일러', author: '게이머', minutesAgo: 7, views: 85000, upvotes: 800, comments: 180, url: 'https://bbs.ruliweb.com/best/board/300143/read/76059841' },
-    { id: 'rl-2', community: 'ruliweb', clusterKey: 'rl_topic_2', clusterName: '[루리웹 2위] 애니메이션 극장판 개봉 확정', title: '애니메이션 극장판 개봉 확정 정보', author: '오타쿠', minutesAgo: 14, views: 72000, upvotes: 650, comments: 140, url: 'https://bbs.ruliweb.com/best/board/300143/read/76059771' },
-    { id: 'rl-3', community: 'ruliweb', clusterKey: 'rl_topic_3', clusterName: '[루리웹 3위] 조립 PC 가성비 견적 추천', title: '이번 달 조립 PC 가성비 견적 추천', author: '컴덕', minutesAgo: 22, views: 60000, upvotes: 550, comments: 95, url: 'https://bbs.ruliweb.com/best/board/300143/read/76059214' },
+const STATUS_LABEL = {
+    ok: { text: '정상', cls: 'ok' },
+    empty: { text: '수집 0건', cls: 'warn' },
+    blocked: { text: '차단됨', cls: 'blocked' },
+    error: { text: '실패', cls: 'error' }
+};
 
-    // --- 인스티즈 (3개) ---
-    { id: 'iz-1', community: 'instiz', clusterKey: 'iz_topic_1', clusterName: '[인티 1위] 아이돌 컴백 티저 실시간 반응', title: '오늘 뜬 아이돌 컴백 티저 실시간 반응', author: '익명', minutesAgo: 8, views: 110000, upvotes: 1200, comments: 320, url: 'https://www.instiz.net/pt/7884810' },
-    { id: 'iz-2', community: 'instiz', clusterKey: 'iz_topic_2', clusterName: '[인티 2위] 다이소 여름 신상 품절대란템', title: '다이소 여름 신상 품절대란템 목록', author: '익명', minutesAgo: 15, views: 95000, upvotes: 950, comments: 210, url: 'https://www.instiz.net/pt/7884681' },
-    { id: 'iz-3', community: 'instiz', clusterKey: 'iz_topic_3', clusterName: '[인티 3위] 넷플릭스 신작 드라마 정주행 후기', title: '넷플릭스 신작 드라마 정주행 달린 후기', author: '익명', minutesAgo: 20, views: 82000, upvotes: 800, comments: 160, url: 'https://www.instiz.net/pt/7884719' },
+const BASIS_NOTE = {
+    'views+comments': null,
+    'comments-only': '조회수 미제공 — 댓글수만으로 산출',
+    'views-only': '댓글수 미제공 — 조회수만으로 산출',
+    partial: '일부 글의 지표가 미제공 — 합산값이 불완전'
+};
 
-    // --- 네이버 종토방 (3개) ---
-    { id: 'ns-1', community: 'naver_stock', clusterKey: 'ns_topic_1', clusterName: '[종토방 1위] 삼성전자 깜짝 외인 대량 매수 유입', title: '삼성전자 깜짝 외인 대량 매수 유입!', author: '삼전존버', minutesAgo: 4, views: 140000, upvotes: 1500, comments: 450, url: 'https://finance.naver.com/item/board_read.naver?code=005930&nid=2415512' },
-    { id: 'ns-2', community: 'naver_stock', clusterKey: 'ns_topic_2', clusterName: '[종토방 2위] SK하이닉스 HBM 관련 증권사 리포트', title: '하이닉스 HBM 증권사 목표가 상향 리포트', author: '하닉가자', minutesAgo: 11, views: 115000, upvotes: 1100, comments: 380, url: 'https://finance.naver.com/item/board_read.naver?code=005930&nid=2415513' },
-    { id: 'ns-3', community: 'naver_stock', clusterKey: 'ns_topic_3', clusterName: '[종토방 3위] 현대차 인도 IPO 상장 호재', title: '현대차 인도 법인 IPO 역대급 규모 호재', author: '현차주주', minutesAgo: 19, views: 90000, upvotes: 850, comments: 250, url: 'https://finance.naver.com/item/board_read.naver?code=005930&nid=2415514' },
+const state = {
+    index: null,
+    snapshot: null,
+    community: 'all',
+    query: '',
+    countdownTimer: null
+};
 
-    // --- 블라인드 주식 (3개) ---
-    { id: 'bl-1', community: 'blind', clusterKey: 'bl_topic_1', clusterName: '[블라 1위] 블라인드 현직자가 말하는 엔비디아 실적', title: '현직이 보는 엔비디아 이번 실적 전망', author: '금융인', minutesAgo: 9, views: 88000, upvotes: 950, comments: 300, url: 'https://www.teamblind.com/kr/post/엔비디아-실적-전망-AbCd12' },
-    { id: 'bl-2', community: 'blind', clusterKey: 'bl_topic_2', clusterName: '[블라 2위] 직장인 5년차 주식 계좌 수익률 인증', title: '5년차 직장인 주식 계좌 수익률 인증함', author: '직장인A', minutesAgo: 16, views: 76000, upvotes: 820, comments: 220, url: 'https://www.teamblind.com/kr/post/수익률-인증합니다-XyZ98' },
-    { id: 'bl-3', community: 'blind', clusterKey: 'bl_topic_3', clusterName: '[블라 3위] 금리 인하 시나리오 수혜주 정리', title: '금리 인하시 포트폴리오 비중 조절 팁', author: '증권맨', minutesAgo: 24, views: 64000, upvotes: 700, comments: 180, url: 'https://www.teamblind.com/kr/post/금리인하-수혜주-QpW34' },
+// DOM
+const el = {
+    communityTabs: document.getElementById('communityTabs'),
+    newsGrid: document.getElementById('newsGrid'),
+    activeFilterName: document.getElementById('activeFilterName'),
+    newsTotalCount: document.getElementById('newsTotalCount'),
+    sourceStatus: document.getElementById('sourceStatus'),
+    snapshotSelect: document.getElementById('snapshotSelect'),
+    latestBtn: document.getElementById('latestBtn'),
+    searchInput: document.getElementById('searchInput'),
+    clearSearchBtn: document.getElementById('clearSearchBtn'),
+    trendingKeywords: document.getElementById('trendingKeywords'),
+    lastUpdatedTime: document.getElementById('lastUpdatedTime'),
+    countdownDisplay: document.getElementById('countdownDisplay'),
+    timerProgressBar: document.getElementById('timerProgressBar'),
+    refreshBtn: document.getElementById('manualRefreshBtn'),
+    refreshIcon: document.getElementById('refreshIcon'),
+    timelineList: document.getElementById('timelineList'),
+    timelineSub: document.getElementById('timelineSub'),
+    toastContainer: document.getElementById('toastContainer')
+};
 
-    // --- 토스증권 (3개) ---
-    { id: 'ts-1', community: 'toss_stock', clusterKey: 'ts_topic_1', clusterName: '[토스 1위] 토스증권 커뮤니티 실시간 인기 급상승 종목', title: '지금 토스증권 커뮤니티 실시간 인기 급상승 종목', author: '토스성투', minutesAgo: 6, views: 55000, upvotes: 600, comments: 150, url: 'https://tossinvest.com/community/articles/45131' },
-    { id: 'ts-2', community: 'toss_stock', clusterKey: 'ts_topic_2', clusterName: '[토스 2위] 배당주 매월 100만원 받기 포트폴리오', title: '배당주 매월 100만원 받기 포트폴리오', author: '배당왕', minutesAgo: 13, views: 48000, upvotes: 520, comments: 120, url: 'https://tossinvest.com/community/articles/45132' },
-    { id: 'ts-3', community: 'toss_stock', clusterKey: 'ts_topic_3', clusterName: '[토스 3위] 20대 사회초년생 ETF 소수점 투자 후기', title: '20대 사회초년생 소수점 투자 리얼 후기', author: '초년생', minutesAgo: 21, views: 42000, upvotes: 450, comments: 90, url: 'https://tossinvest.com/community/articles/45133' },
+// ===== 유틸 =====
 
-    // --- 디시 주식/미주갤 (3개) ---
-    { id: 'ds-1', community: 'dc_stock', clusterKey: 'ds_topic_1', clusterName: '[디시 주식 1위] 미국 CPI 지수 발표 직후 나스닥 무빙', title: '미국 CPI 지수 발표 직후 나스닥 선물 무빙 ㄷㄷ', author: '미주갤러', minutesAgo: 3, views: 98000, upvotes: 1200, comments: 380, url: 'https://gall.dcinside.com/board/view/?id=neostock&no=7210185' },
-    { id: 'ds-2', community: 'dc_stock', clusterKey: 'ds_topic_2', clusterName: '[디시 주식 2위] 테슬라 FSD 업데이트 자율주행 체감', title: '테슬라 FSD 업데이트 후 실주행 체감.txt', author: '테슬람', minutesAgo: 10, views: 85000, upvotes: 950, comments: 260, url: 'https://gall.dcinside.com/board/view/?id=neostock&no=7210186' },
-    { id: 'ds-3', community: 'dc_stock', clusterKey: 'ds_topic_3', clusterName: '[디시 주식 3위] 코스피 금융투자소득세 도입 반대 토론', title: '코스피 금투세 도입 반대 이유 정리해준다', author: '주갤러', minutesAgo: 17, views: 72000, upvotes: 800, comments: 210, url: 'https://gall.dcinside.com/board/view/?id=neostock&no=7210187' },
-
-    // --- 부동산 스터디 (3개) ---
-    { id: 'nb-1', community: 'naver_boos', clusterKey: 'nb_topic_1', clusterName: '[부동산스터디 1위] 서초구 반포 대장 아파트 신고가 갱신', title: '서초구 반포 대장 아파트 평당 1억 신고가 갱신', author: '부동산고수', minutesAgo: 8, views: 125000, upvotes: 1800, comments: 450, url: 'https://cafe.naver.com/jaeup/3516035' },
-    { id: 'nb-2', community: 'naver_boos', clusterKey: 'nb_topic_2', clusterName: '[부동산스터디 2위] 신생아 특례대출 조건 및 후기', title: '신생아 특례대출 승인 조건 및 진행 후기', author: '내집마련', minutesAgo: 15, views: 108000, upvotes: 1500, comments: 380, url: 'https://cafe.naver.com/jaeup/3516036' },
-    { id: 'nb-3', community: 'naver_boos', clusterKey: 'nb_topic_3', clusterName: '[부동산스터디 3위] 서울 30평대 아파트 전세 품귀 현상', title: '서울 30평대 아파트 전세 씨가 말랐습니다', author: '임대인', minutesAgo: 23, views: 92000, upvotes: 1100, comments: 290, url: 'https://cafe.naver.com/jaeup/3516037' },
-
-    // --- 월급쟁이부자들 (3개) ---
-    { id: 'wb-1', community: 'weolbu', clusterKey: 'wb_topic_1', clusterName: '[월부 1위] 수도권 GTX 개통 수혜지 신축 임장 보고서', title: '수도권 GTX 개통 수혜지 신축 임장 보고서', author: '발품왕', minutesAgo: 7, views: 88000, upvotes: 1400, comments: 310, url: 'https://cafe.naver.com/weolbu/1928301' },
-    { id: 'wb-2', community: 'weolbu', clusterKey: 'wb_topic_2', clusterName: '[월부 2위] 평범한 30대 부부 종잣돈 1억 모으기 꿀팁', title: '평범한 30대 부부 종잣돈 1억 모으기 성공기', author: '저축왕', minutesAgo: 16, views: 76000, upvotes: 1100, comments: 250, url: 'https://cafe.naver.com/weolbu/1928302' },
-    { id: 'wb-3', community: 'weolbu', clusterKey: 'wb_topic_3', clusterName: '[월부 3위] 첫 경매 도전 낙찰 성공기', title: '태어나서 처음 경매 도전해서 낙찰받았습니다!', author: '경매초보', minutesAgo: 25, views: 65000, upvotes: 900, comments: 190, url: 'https://cafe.naver.com/weolbu/1928303' },
-
-    // --- 호갱노노 (3개) ---
-    { id: 'hg-1', community: 'hogangnono', clusterKey: 'hg_topic_1', clusterName: '[호갱노노 1위] 송파구 신축 아파트 입주민 찐 거주 후기', title: '송파구 신축 아파트 2년 살아본 입주민 찐 후기', author: '마포거주', minutesAgo: 5, views: 62000, upvotes: 850, comments: 210, url: 'https://hogangnono.com/apt/23D34/0/0' },
-    { id: 'hg-2', community: 'hogangnono', clusterKey: 'hg_topic_2', clusterName: '[호갱노노 2위] 단지 내 커뮤니티 시설 및 주차장 평가', title: '커뮤니티 시설 및 주차장 객관적 평가', author: '입주민A', minutesAgo: 14, views: 55000, upvotes: 720, comments: 170, url: 'https://hogangnono.com/apt/23D34/1/1' },
-    { id: 'hg-3', community: 'hogangnono', clusterKey: 'hg_topic_3', clusterName: '[호갱노노 3위] 초품아 아파트 통학로 안전 문제', title: '초품아 아파트지만 통학로 안전 확인 필요', author: '학부모', minutesAgo: 22, views: 48000, upvotes: 600, comments: 130, url: 'https://hogangnono.com/apt/23D34/2/2' },
-
-    // --- 디시 부동산갤 (3개) ---
-    { id: 'dr-1', community: 'dc_realestate', clusterKey: 'dr_topic_1', clusterName: '[디시 부갤 1위] 하반기 부동산 매수 타이밍 끝장 토론', title: '하반기 부동산 매수 타이밍 지금이냐 아니냐', author: '부갤러', minutesAgo: 6, views: 82000, upvotes: 1100, comments: 420, url: 'https://gall.dcinside.com/board/view/?id=immovables&no=6450624' },
-    { id: 'dr-2', community: 'dc_realestate', clusterKey: 'dr_topic_2', clusterName: '[디시 부갤 2위] 1기 신도시 재건축 선도지구 지정 썰', title: '1기 신도시 재건축 선도지구 지정 찌라시 푼다', author: '분당주민', minutesAgo: 13, views: 71000, upvotes: 950, comments: 340, url: 'https://gall.dcinside.com/board/view/?id=immovables&no=6450625' },
-    { id: 'dr-3', community: 'dc_realestate', clusterKey: 'dr_topic_3', clusterName: '[디시 부갤 3위] 지방 광역시 분양시장 미분양 사태', title: '지방 광역시 분양시장 악성 미분양 심각하네', author: '지방러', minutesAgo: 20, views: 60000, upvotes: 800, comments: 260, url: 'https://gall.dcinside.com/board/view/?id=immovables&no=6450626' }
-];
-
-// App State
-let activeCommunityFilter = 'all';
-
-// DOM Elements
-const communityTabs = document.getElementById('communityTabs');
-const newsGrid = document.getElementById('newsGrid');
-const activeFilterNameEl = document.getElementById('activeFilterName');
-
-// ===== Topic Clustering & Metric Summing Engine =====
-function createTopicClusters(articles) {
-    const map = {};
-    articles.forEach(art => {
-        const key = art.clusterKey;
-        if (!map[key]) {
-            map[key] = {
-                clusterId: key,
-                clusterName: art.clusterName,
-                totalViews: 0,
-                totalComments: 0,
-                articles: [],
-                minMinutesAgo: 999
-            };
-        }
-        map[key].totalViews += art.views;
-        map[key].totalComments += art.comments;
-        map[key].articles.push(art);
-        if (art.minutesAgo < map[key].minMinutesAgo) {
-            map[key].minMinutesAgo = art.minutesAgo;
-        }
-    });
-
-    // 조회수 + 댓글 개수 * 100(가중치) 로 합산 점수 생성
-    return Object.values(map).map(cluster => ({
-        ...cluster,
-        score: cluster.totalViews + (cluster.totalComments * 100)
-    }));
+function escapeHtml(s) {
+    return String(s === null || s === undefined ? '' : s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
-// ===== App Initialization =====
-function initApp() {
-    renderCommunityPills();
-    renderFeed();
+/** null 은 "미제공"이다. 0 과 구분해서 표기한다. */
+function metric(value) {
+    if (value === null || value === undefined) return '미제공';
+    return Number(value).toLocaleString();
 }
+
+function communityOf(id) {
+    return COMMUNITY_CONFIG[id] || { id, name: id, color: '#94a3b8', bgColor: 'rgba(148,163,184,0.14)' };
+}
+
+function toast(message) {
+    if (!el.toastContainer) return;
+    const div = document.createElement('div');
+    div.className = 'toast';
+    div.textContent = message;
+    el.toastContainer.appendChild(div);
+    setTimeout(() => div.remove(), 3200);
+}
+
+function formatSlot(slotLabel) {
+    // "2026-07-26T19:00+09:00" → "07/26 19:00"
+    const m = String(slotLabel).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+    if (!m) return slotLabel;
+    return m[2] + '/' + m[3] + ' ' + m[4] + ':' + m[5];
+}
+
+async function fetchJson(path) {
+    const res = await fetch(path + '?t=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) throw new Error(path + ' → HTTP ' + res.status);
+    return res.json();
+}
+
+// ===== 렌더 =====
 
 function renderCommunityPills() {
-    communityTabs.innerHTML = '';
-    const allBtn = document.createElement('button');
-    allBtn.className = `community-tab ${activeCommunityFilter === 'all' ? 'active' : ''}`;
-    allBtn.innerHTML = `전체보기`;
-    allBtn.onclick = () => { activeCommunityFilter = 'all'; renderFeed(); renderCommunityPills(); };
-    communityTabs.appendChild(allBtn);
+    el.communityTabs.innerHTML = '';
 
-    Object.values(COMMUNITY_CONFIG).forEach(comm => {
+    const counts = {};
+    if (state.snapshot) {
+        state.snapshot.sources.forEach(s => { counts[s.id] = s.itemCount; });
+    }
+
+    const makePill = (id, label, count) => {
         const btn = document.createElement('button');
-        btn.className = `community-tab ${activeCommunityFilter === comm.id ? 'active' : ''}`;
-        btn.innerHTML = `${comm.name}`;
-        btn.onclick = () => { activeCommunityFilter = comm.id; renderFeed(); renderCommunityPills(); };
-        communityTabs.appendChild(btn);
+        btn.className = 'community-tab' + (state.community === id ? ' active' : '');
+        btn.innerHTML = escapeHtml(label) + (count === null ? '' : ' <span class="pill-count">' + count + '</span>');
+        btn.onclick = () => {
+            state.community = id;
+            renderCommunityPills();
+            renderFeed();
+        };
+        el.communityTabs.appendChild(btn);
+    };
+
+    const total = state.snapshot ? state.snapshot.itemCount : null;
+    makePill('all', '전체보기', total);
+    Object.values(COMMUNITY_CONFIG).forEach(c => makePill(c.id, c.name, counts[c.id] === undefined ? null : counts[c.id]));
+}
+
+function renderSourceStatus() {
+    if (!state.snapshot) return;
+
+    const items = state.snapshot.sources.map(s => {
+        const label = STATUS_LABEL[s.status] || { text: s.status, cls: 'warn' };
+        const provides = [];
+        if (!s.provides.views) provides.push('조회수 미제공');
+        if (!s.provides.comments) provides.push('댓글수 미제공');
+
+        return (
+            '<div class="source-chip ' + label.cls + '">' +
+            '<span class="source-name">' + escapeHtml(s.name) + '</span>' +
+            '<span class="source-state">' + label.text + '</span>' +
+            '<span class="source-count">' + s.itemCount + '건</span>' +
+            (provides.length ? '<span class="source-note">' + provides.join(' · ') + '</span>' : '') +
+            (s.error ? '<span class="source-error" title="' + escapeHtml(s.error) + '">' + escapeHtml(s.error) + '</span>' : '') +
+            '</div>'
+        );
+    });
+
+    const okCount = state.snapshot.sources.filter(s => s.status === 'ok').length;
+
+    el.sourceStatus.innerHTML =
+        '<div class="source-status-head">' +
+        '<span class="material-symbols-rounded">monitor_heart</span>' +
+        '<strong>소스 수집 상태</strong>' +
+        '<span class="source-status-sum">' + okCount + ' / ' + state.snapshot.sources.length + ' 정상</span>' +
+        '</div>' +
+        '<div class="source-chips">' + items.join('') + '</div>';
+}
+
+/** 커뮤니티 필터·검색어를 적용해 TOP N 클러스터를 재산출한다 */
+function selectClusters() {
+    if (!state.snapshot) return [];
+
+    let clusters = state.snapshot.clusters || [];
+
+    if (state.community !== 'all') {
+        // 해당 커뮤니티의 글을 포함한 클러스터만
+        clusters = clusters.filter(c => c.communities.indexOf(state.community) !== -1);
+    }
+
+    if (state.query) {
+        const q = state.query.toLowerCase();
+        clusters = clusters.filter(c => {
+            if (c.title.toLowerCase().indexOf(q) !== -1) return true;
+            return c.items.some(i => i.title.toLowerCase().indexOf(q) !== -1);
+        });
+    }
+
+    return clusters.slice().sort((a, b) => b.score - a.score).slice(0, TOP_N);
+}
+
+function renderFeed() {
+    const clusters = selectClusters();
+
+    const filterName =
+        state.community === 'all' ? '전체 커뮤니티' : communityOf(state.community).name;
+    el.activeFilterName.textContent =
+        filterName + ' · 조회수+댓글수 기준 TOP ' + TOP_N;
+
+    el.newsTotalCount.textContent = state.snapshot
+        ? state.snapshot.itemCount + '개 글 → ' + state.snapshot.clusterCount + '개 그룹'
+        : '-';
+
+    if (clusters.length === 0) {
+        el.newsGrid.innerHTML =
+            '<div class="empty-state">' +
+            '<span class="material-symbols-rounded">inbox</span>' +
+            '<p>표시할 그룹이 없습니다.</p>' +
+            '</div>';
+        return;
+    }
+
+    const medals = ['🥇 1위', '🥈 2위', '🥉 3위'];
+
+    el.newsGrid.innerHTML = clusters
+        .map((cluster, idx) => {
+            const note = BASIS_NOTE[cluster.scoreBasis];
+
+            const sources = cluster.items
+                .map(item => {
+                    const c = communityOf(item.community);
+                    return (
+                        '<a class="cluster-source" href="' + escapeHtml(item.url) + '" target="_blank" rel="noopener noreferrer">' +
+                        '<span class="community-badge" style="background:' + c.bgColor + ';color:' + c.color + '">' +
+                        escapeHtml(c.name) + '</span>' +
+                        '<span class="cluster-source-title">' + escapeHtml(item.title) + '</span>' +
+                        '<span class="cluster-source-metrics">조회 ' + metric(item.views) + ' · 댓글 ' + metric(item.comments) + '</span>' +
+                        '<span class="cluster-source-go">원문 ↗</span>' +
+                        '</a>'
+                    );
+                })
+                .join('');
+
+            const communityBadges = cluster.communities
+                .map(id => {
+                    const c = communityOf(id);
+                    return '<span class="community-badge" style="background:' + c.bgColor + ';color:' + c.color + '">' + escapeHtml(c.name) + '</span>';
+                })
+                .join('');
+
+            return (
+                '<article class="news-card">' +
+                '<div class="card-rank-row">' +
+                '<span class="rank-medal">' + medals[idx] + '</span>' +
+                '<span class="card-group-count">유사글 ' + cluster.memberCount + '건 묶음</span>' +
+                '</div>' +
+                '<h3 class="card-title">' + escapeHtml(cluster.title) + '</h3>' +
+                '<div class="card-communities">' + communityBadges + '</div>' +
+                '<div class="card-metrics">' +
+                '<div class="metric-box"><span class="metric-label">총 조회수</span><strong>' + metric(cluster.totalViews) + '</strong></div>' +
+                '<div class="metric-box"><span class="metric-label">총 댓글수</span><strong>' + metric(cluster.totalComments) + '</strong></div>' +
+                '<div class="metric-box"><span class="metric-label">점수</span><strong>' + cluster.score.toLocaleString() + '</strong></div>' +
+                '</div>' +
+                (note ? '<div class="basis-warning"><span class="material-symbols-rounded">warning</span>' + escapeHtml(note) + '</div>' : '') +
+                '<div class="cluster-sources">' +
+                '<div class="cluster-sources-label">묶인 글 ' + cluster.items.length + '건</div>' +
+                sources +
+                '</div>' +
+                '</article>'
+            );
+        })
+        .join('');
+}
+
+/** 클러스터 대표 제목에서 빈출 토큰을 뽑는다 (수집된 실데이터 기반) */
+function renderTrendingKeywords() {
+    if (!state.snapshot) return;
+
+    const STOP = ['그리고', '하지만', '있는', '없는', '진짜', '이거', '그거', '요즘', '지금', '너무', '오늘'];
+    const counts = {};
+
+    (state.snapshot.clusters || []).forEach(c => {
+        c.title
+            .replace(/[^가-힣a-zA-Z0-9\s]/g, ' ')
+            .split(/\s+/)
+            .forEach(word => {
+                if (word.length < 2 || word.length > 10) return;
+                if (STOP.indexOf(word) !== -1) return;
+                counts[word] = (counts[word] || 0) + 1;
+            });
+    });
+
+    const top = Object.keys(counts)
+        .map(w => ({ w, n: counts[w] }))
+        .filter(x => x.n > 1)
+        .sort((a, b) => b.n - a.n)
+        .slice(0, 12);
+
+    if (top.length === 0) {
+        el.trendingKeywords.innerHTML = '<span class="trending-empty">2회 이상 등장한 키워드가 없습니다</span>';
+        return;
+    }
+
+    el.trendingKeywords.innerHTML = top
+        .map(x =>
+            '<button class="trending-tag" data-keyword="' + escapeHtml(x.w) + '">' +
+            escapeHtml(x.w) + '<span class="tag-count">' + x.n + '</span></button>'
+        )
+        .join('');
+
+    Array.from(el.trendingKeywords.querySelectorAll('.trending-tag')).forEach(btn => {
+        btn.onclick = () => {
+            el.searchInput.value = btn.dataset.keyword;
+            state.query = btn.dataset.keyword;
+            el.clearSearchBtn.classList.remove('hidden');
+            renderFeed();
+        };
     });
 }
 
-// 무조건 TOP 3만 엄격하게 추출하는 렌더링 함수
-function renderFeed() {
-    let filtered = rawArticlesDatabase;
-    
-    if (activeCommunityFilter !== 'all') {
-        filtered = rawArticlesDatabase.filter(news => news.community === activeCommunityFilter);
-        activeFilterNameEl.textContent = `${COMMUNITY_CONFIG[activeCommunityFilter].name} 30분 내 화제성 TOP 3`;
-    } else {
-        activeFilterNameEl.textContent = `전체 커뮤니티 30분 내 화제성 TOP 3`;
+function renderSnapshotSelect() {
+    if (!state.index) return;
+
+    el.snapshotSelect.innerHTML = state.index.slots
+        .map(s =>
+            '<option value="' + escapeHtml(s.path) + '"' +
+            (state.snapshot && state.snapshot.slot === s.slot ? ' selected' : '') + '>' +
+            formatSlot(s.slot) + ' (' + s.okSources + '/' + s.totalSources + ' 정상, ' + s.itemCount + '건)' +
+            '</option>'
+        )
+        .join('');
+}
+
+function renderTimeline() {
+    if (!state.index) return;
+
+    const slots = state.index.slots;
+    el.timelineSub.textContent =
+        '누적 ' + slots.length + '개 스냅샷 · ' + (state.index.retentionDays || 7) + '일 보관';
+
+    if (slots.length === 0) {
+        el.timelineList.innerHTML = '<div class="empty-state"><p>아직 누적된 스냅샷이 없습니다.</p></div>';
+        return;
     }
 
-    // 1. 유사글 합산 (조회수 + 댓글수 합산)
-    let clusters = createTopicClusters(filtered);
+    el.timelineList.innerHTML = slots
+        .slice(0, 48)
+        .map(s => {
+            const active = state.snapshot && state.snapshot.slot === s.slot;
+            return (
+                '<button class="timeline-row' + (active ? ' active' : '') + '" data-path="' + escapeHtml(s.path) + '">' +
+                '<span class="timeline-time">' + formatSlot(s.slot) + '</span>' +
+                '<span class="timeline-top1">' + escapeHtml(s.top1 || '수집 결과 없음') + '</span>' +
+                '<span class="timeline-meta">' + s.itemCount + '건 · ' + s.okSources + '/' + s.totalSources + '</span>' +
+                '</button>'
+            );
+        })
+        .join('');
 
-    // 2. 합산 점수(score) 기반으로 정렬
-    clusters.sort((a, b) => b.score - a.score);
-
-    // 3. 무조건 TOP 3만 슬라이싱
-    let top3Clusters = clusters.slice(0, 3);
-
-    newsGrid.innerHTML = '';
-
-    top3Clusters.forEach((cluster, idx) => {
-        const rankMedal = idx === 0 ? '🥇 1위' : (idx === 1 ? '🥈 2위' : '🥉 3위');
-
-        // 각 클러스터에 묶인 실제 본문 주소 렌더링
-        const sourcesHtml = cluster.articles.map(art => {
-            const comm = COMMUNITY_CONFIG[art.community];
-            return `
-                <a href="${art.url}" target="_blank" style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: rgba(15,23,42,0.8); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; margin-top: 6px; text-decoration: none; color: #fff;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="background: ${comm.bgColor}; color: ${comm.color}; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 0.78rem;">
-                            ${comm.name}
-                        </span>
-                        <span style="font-size: 0.88rem; font-weight: 600;">
-                            ${art.title}
-                        </span>
-                    </div>
-                    <div style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 700;">
-                        원문보기 ↗
-                    </div>
-                </a>
-            `;
-        }).join('');
-
-        const card = document.createElement('article');
-        card.className = 'news-card';
-        card.innerHTML = `
-            <div style="margin-bottom: 10px;">
-                <span style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; padding: 5px 12px; border-radius: 20px; font-weight: 800;">
-                    ${rankMedal} • 합산 랭킹
-                </span>
-                <span style="float:right; color:#888; font-size:0.9rem;">${cluster.minMinutesAgo}분 전 쓰여짐</span>
-            </div>
-            <h3 style="font-size: 1.15rem; font-weight: 800; color: #fff; margin-bottom: 10px;">
-                ${cluster.clusterName}
-            </h3>
-            <div style="display: flex; gap: 20px; background: rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 10px; margin-bottom: 15px;">
-                <div>총 조회수: <strong style="font-size:1.1rem; color:#fff;">${cluster.totalViews.toLocaleString()}회</strong></div>
-                <div>총 댓글수: <strong style="font-size:1.1rem; color:#fff;">${cluster.totalComments.toLocaleString()}개</strong></div>
-            </div>
-            <div>
-                <div style="font-size: 0.85rem; color: #aaa; margin-bottom: 8px;">🔗 본문 읽기:</div>
-                ${sourcesHtml}
-            </div>
-        `;
-        newsGrid.appendChild(card);
+    Array.from(el.timelineList.querySelectorAll('.timeline-row')).forEach(row => {
+        row.onclick = () => loadSnapshot(row.dataset.path);
     });
+}
+
+// ===== 카운트다운 =====
+//
+// GitHub Actions 예약 실행은 부하에 따라 수 분 지연되거나 건너뛸 수 있다.
+// 따라서 "정확히 30분 후"를 약속하지 않고, 기록된 capturedAt 기준의 "예정" 시각으로 표기한다.
+
+function updateCountdown() {
+    if (!state.snapshot) return;
+
+    const captured = new Date(state.snapshot.capturedAt);
+    const elapsedMin = (Date.now() - captured.getTime()) / 60000;
+
+    el.lastUpdatedTime.textContent =
+        '마지막 수집: ' + captured.toLocaleString('ko-KR', { hour12: false }) +
+        ' (' + (elapsedMin < 1 ? '방금 전' : Math.floor(elapsedMin) + '분 전') + ')';
+
+    const remaining = SLOT_MINUTES - (elapsedMin % SLOT_MINUTES);
+    if (elapsedMin > SLOT_MINUTES * 2) {
+        el.countdownDisplay.textContent = '지연';
+        el.countdownDisplay.title = '예정 주기를 넘겼습니다. GitHub Actions 실행이 지연되거나 건너뛰어졌을 수 있습니다.';
+        el.timerProgressBar.style.width = '100%';
+        return;
+    }
+
+    const mm = Math.floor(remaining);
+    const ss = Math.floor((remaining - mm) * 60);
+    el.countdownDisplay.textContent =
+        String(mm).padStart(2, '0') + ':' + String(ss).padStart(2, '0');
+    el.timerProgressBar.style.width = ((SLOT_MINUTES - remaining) / SLOT_MINUTES * 100).toFixed(1) + '%';
+}
+
+// ===== 로딩 =====
+
+async function loadSnapshot(path) {
+    try {
+        state.snapshot = await fetchJson('data/' + path);
+        renderAll();
+    } catch (err) {
+        toast('스냅샷을 불러오지 못했습니다: ' + err.message);
+    }
+}
+
+function renderAll() {
+    renderCommunityPills();
+    renderSourceStatus();
+    renderFeed();
+    renderTrendingKeywords();
+    renderSnapshotSelect();
+    renderTimeline();
+    updateCountdown();
+}
+
+async function loadAll() {
+    el.refreshIcon.classList.add('icon-spin');
+    try {
+        const [index, latest] = await Promise.all([
+            fetchJson('data/index.json'),
+            fetchJson('data/latest.json')
+        ]);
+        state.index = index;
+        state.snapshot = latest;
+        renderAll();
+    } catch (err) {
+        el.newsGrid.innerHTML =
+            '<div class="empty-state">' +
+            '<span class="material-symbols-rounded">error</span>' +
+            '<p>수집 데이터를 불러오지 못했습니다.</p>' +
+            '<p class="empty-detail">' + escapeHtml(err.message) + '</p>' +
+            '<p class="empty-detail">아직 수집한 적이 없다면 <code>npm run collect</code> 를 먼저 실행하세요. ' +
+            'file:// 로 직접 열면 브라우저가 fetch 를 막으므로 <code>npm run serve</code> 로 확인하세요.</p>' +
+            '</div>';
+        el.lastUpdatedTime.textContent = '수집 기록 없음';
+    } finally {
+        el.refreshIcon.classList.remove('icon-spin');
+    }
+}
+
+function initApp() {
+    el.refreshBtn.onclick = loadAll;
+
+    el.latestBtn.onclick = () => {
+        if (state.index && state.index.slots.length > 0) {
+            loadSnapshot(state.index.slots[0].path);
+        }
+    };
+
+    el.snapshotSelect.onchange = e => loadSnapshot(e.target.value);
+
+    el.searchInput.oninput = e => {
+        state.query = e.target.value.trim();
+        el.clearSearchBtn.classList.toggle('hidden', state.query === '');
+        renderFeed();
+    };
+
+    el.clearSearchBtn.onclick = () => {
+        el.searchInput.value = '';
+        state.query = '';
+        el.clearSearchBtn.classList.add('hidden');
+        renderFeed();
+    };
+
+    loadAll();
+    state.countdownTimer = setInterval(updateCountdown, 1000);
 }
 
 document.addEventListener('DOMContentLoaded', initApp);

@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>커뮤니티 펄스 | 30분 실시간 종합/주식/부동산 뉴스 모아보기</title>
-    <meta name="description" content="에펨코리아, 루리웹, 인스티즈, 네이버 종토방, 미주갤, 블라인드, 토스증권, 부동산스터디, 월부, 호갱노노 등 주요 커뮤니티의 최신 핫이슈를 30분 단위로 자동 업데이트하여 모아보는 대시보드">
+    <title>커뮤니티 펄스 | 30분 단위 커뮤니티 화제글 TOP 3</title>
+    <meta name="description" content="에펨코리아, 루리웹, 인스티즈, 네이버 종토방, 디시 주식갤·부동산갤의 공개 게시판을 30분마다 수집해 유사한 글을 묶고 조회수+댓글수 기준 TOP 3를 누적 기록하는 대시보드">
     <!-- Google Fonts Pretendard & Material Symbols -->
     <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
@@ -25,35 +25,30 @@
                 </div>
                 <div class="brand-text">
                     <h1>Community Pulse</h1>
-                    <span class="brand-subtitle">종합 · 주식 · 부동산 11대 커뮤니티 30분 수집</span>
+                    <span class="brand-subtitle">공개 커뮤니티 6곳 · 30분 단위 수집</span>
                 </div>
             </div>
 
-            <!-- Auto Update Controller -->
+            <!-- Collection Status -->
             <div class="timer-widget">
                 <div class="timer-info">
-                    <span class="live-dot" title="30분 주기 수집 실행 중"></span>
-                    <span class="timer-label">다음 자동 수집까지</span>
-                    <span class="timer-countdown" id="countdownDisplay">30:00</span>
+                    <span class="live-dot" title="30분 주기 수집"></span>
+                    <span class="timer-label">다음 수집 예정까지</span>
+                    <span class="timer-countdown" id="countdownDisplay">--:--</span>
                 </div>
                 <div class="timer-progress-bar">
                     <div class="timer-progress-fill" id="timerProgressBar"></div>
                 </div>
                 <div class="timer-meta">
-                    <span id="lastUpdatedTime">마지막 업데이트: 방금 전</span>
+                    <span id="lastUpdatedTime">수집 기록 불러오는 중…</span>
                 </div>
             </div>
 
             <!-- Global Actions -->
             <div class="nav-actions">
-                <button class="btn btn-outline refresh-btn" id="manualRefreshBtn" title="즉시 피드 수집">
-                    <span class="material-symbols-rounded icon-spin" id="refreshIcon">refresh</span>
-                    <span class="btn-text">지금 수집</span>
-                </button>
-                <button class="btn btn-primary bookmark-toggle-btn" id="openBookmarkBtn">
-                    <span class="material-symbols-rounded">bookmark</span>
-                    <span class="btn-text">북마크</span>
-                    <span class="badge" id="bookmarkCount">0</span>
+                <button class="btn btn-outline refresh-btn" id="manualRefreshBtn" title="최신 스냅샷 다시 불러오기">
+                    <span class="material-symbols-rounded" id="refreshIcon">refresh</span>
+                    <span class="btn-text">새로고침</span>
                 </button>
             </div>
         </header>
@@ -62,7 +57,7 @@
         <section class="trending-bar glass">
             <div class="trending-title">
                 <span class="material-symbols-rounded hot-fire">local_fire_department</span>
-                <span>실시간 핫 키워드</span>
+                <span>이번 수집 빈출 키워드</span>
             </div>
             <div class="trending-tags" id="trendingKeywords">
                 <!-- Keywords injected by JS -->
@@ -73,42 +68,25 @@
         <main class="main-container">
             <!-- Filter Bar & Search -->
             <div class="filter-wrapper glass">
-                <!-- Sector Level Tabs -->
-                <div class="sector-tabs" id="sectorTabs">
-                    <button class="sector-tab active" data-sector="all">
-                        <span class="material-symbols-rounded">apps</span> 전체 (11개 커뮤니티)
-                    </button>
-                    <button class="sector-tab" data-sector="general">
-                        <span class="material-symbols-rounded">forum</span> 💬 종합/유머
-                    </button>
-                    <button class="sector-tab" data-sector="stock">
-                        <span class="material-symbols-rounded">trending_up</span> 📈 주식/증시
-                    </button>
-                    <button class="sector-tab" data-sector="realestate">
-                        <span class="material-symbols-rounded">apartment</span> 🏢 부동산/청약
-                    </button>
-                </div>
-
                 <!-- Community Pill Filters -->
                 <div class="community-tabs" id="communityTabs">
                     <!-- Dynamic community pills rendered by JS -->
                 </div>
 
-                <!-- Topic Category Badges & Search -->
                 <div class="topic-row">
-                    <div class="topic-categories" id="topicCategories">
-                        <button class="topic-badge active" data-topic="all">전체</button>
-                        <button class="topic-badge" data-topic="hot">🔥 HOT 인기글</button>
-                        <button class="topic-badge" data-topic="stock">📈 주식/증시</button>
-                        <button class="topic-badge" data-topic="realestate">🏢 부동산/청약</button>
-                        <button class="topic-badge" data-topic="game">🎮 게임/서브컬처</button>
-                        <button class="topic-badge" data-topic="entertainment">💄 연예/일상</button>
-                        <button class="topic-badge" data-topic="sports">⚽ 스포츠/이슈</button>
+                    <!-- Snapshot history selector -->
+                    <div class="history-control">
+                        <label class="history-label" for="snapshotSelect">
+                            <span class="material-symbols-rounded">history</span>
+                            수집 시점
+                        </label>
+                        <select id="snapshotSelect" class="history-select"></select>
+                        <button class="btn btn-outline btn-small" id="latestBtn">최신으로</button>
                     </div>
 
                     <div class="search-box">
                         <span class="material-symbols-rounded search-icon">search</span>
-                        <input type="text" id="searchInput" placeholder="종목, 아파트, 뉴스 키워드 검색...">
+                        <input type="text" id="searchInput" placeholder="제목 키워드 검색...">
                         <button class="clear-search hidden" id="clearSearchBtn">
                             <span class="material-symbols-rounded">cancel</span>
                         </button>
@@ -116,80 +94,42 @@
                 </div>
             </div>
 
-            <!-- News Grid Header -->
+            <!-- Source status panel -->
+            <section class="source-status glass" id="sourceStatus">
+                <!-- Per-source collection status injected by JS -->
+            </section>
+
+            <!-- Feed Header -->
             <div class="feed-header">
                 <div class="feed-count-summary">
                     <span id="activeFilterName">전체 커뮤니티</span>
-                    <span class="count-number" id="newsTotalCount">0개 게시글</span>
-                </div>
-                <div class="sort-options">
-                    <button class="sort-btn active" data-sort="latest">최신순</button>
-                    <button class="sort-btn" data-sort="hot">인기순 (조회/추천)</button>
+                    <span class="count-number" id="newsTotalCount">-</span>
                 </div>
             </div>
 
-            <!-- News Feed Grid Container -->
+            <!-- TOP 3 cluster cards -->
             <div class="news-grid" id="newsGrid">
-                <!-- News cards rendered dynamically by JS -->
+                <!-- Cards rendered dynamically by JS -->
             </div>
+
+            <!-- Accumulated timeline -->
+            <section class="timeline-section glass">
+                <div class="timeline-head">
+                    <h2>
+                        <span class="material-symbols-rounded">timeline</span>
+                        누적 수집 이력
+                    </h2>
+                    <span class="timeline-sub" id="timelineSub">-</span>
+                </div>
+                <div class="timeline-list" id="timelineList">
+                    <!-- Past snapshots injected by JS -->
+                </div>
+            </section>
         </main>
     </div>
 
     <!-- Toast Notification -->
     <div class="toast-container" id="toastContainer"></div>
-
-    <!-- Article Detail Modal -->
-    <div class="modal-overlay" id="newsDetailModal">
-        <div class="modal-card glass">
-            <div class="modal-header">
-                <div class="modal-community-badge" id="modalCommunityBadge">에펨코리아</div>
-                <button class="close-modal-btn" id="closeDetailModalBtn">
-                    <span class="material-symbols-rounded">close</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <h2 class="modal-news-title" id="modalTitle">게시글 제목</h2>
-                <div class="modal-meta-row" id="modalMeta">
-                    <!-- Meta info injected by JS -->
-                </div>
-                <div class="modal-summary-box">
-                    <h4>📌 30분 수집 뉴스 핵심 요약</h4>
-                    <p id="modalSummary">요약 내용이 표시됩니다.</p>
-                </div>
-                <div class="modal-stats-row" id="modalStats">
-                    <!-- Stats injected by JS -->
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" id="modalBookmarkBtn">
-                    <span class="material-symbols-rounded">bookmark</span>
-                    <span>북마크 추가</span>
-                </button>
-                <a href="#" target="_blank" rel="noopener noreferrer" class="btn btn-primary" id="modalOriginalLink">
-                    <span>원문 커뮤니티 바로가기</span>
-                    <span class="material-symbols-rounded">open_in_new</span>
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bookmark Drawer / Modal -->
-    <div class="modal-overlay" id="bookmarkDrawerModal">
-        <div class="modal-card glass drawer-card">
-            <div class="modal-header">
-                <div class="drawer-title">
-                    <span class="material-symbols-rounded">bookmarks</span>
-                    <h3>보관한 커뮤니티 뉴스 (<span id="drawerBookmarkCount">0</span>)</h3>
-                </div>
-                <button class="close-modal-btn" id="closeBookmarkBtn">
-                    <span class="material-symbols-rounded">close</span>
-                </button>
-            </div>
-            <div class="modal-body drawer-body" id="bookmarkList">
-                <!-- Saved items rendered here -->
-            </div>
-        </div>
-    </div>
 
     <script src="app.js"></script>
 </body>

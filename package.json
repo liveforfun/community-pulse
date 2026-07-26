@@ -1,0 +1,13 @@
+{
+  "name": "community-pulse",
+  "version": "1.0.0",
+  "description": "6개 공개 커뮤니티를 30분마다 수집해 유사글을 묶고 조회수+댓글수 기준 TOP 3를 누적하는 대시보드",
+  "private": true,
+  "scripts": {
+    "collect": "node collector/collect.js",
+    "serve": "python3 -m http.server 8080"
+  },
+  "engines": {
+    "node": ">=16"
+  }
+}

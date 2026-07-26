@@ -1,0 +1,51 @@
+name: 30분 단위 커뮤니티 수집
+
+on:
+  schedule:
+    # 30분마다. GitHub Actions 예약 실행은 부하에 따라 수 분 지연되거나 건너뛸 수 있다.
+    # 정확한 주기가 보장되지 않으므로 UI 는 스냅샷에 기록된 실제 capturedAt 을 표시한다.
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+# 같은 시각에 두 번 돌아 커밋이 충돌하지 않게 한다
+concurrency:
+  group: collect
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # 외부 의존성이 없으므로 npm install 이 필요 없다
+      - name: 수집 실행
+        run: node collector/collect.js
+        # 전 소스 실패 시 exit 1 이지만, 상태 기록 자체가 데이터이므로 커밋은 계속한다
+        continue-on-error: true
+
+      - name: 스냅샷 커밋
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          if git diff --staged --quiet; then
+            echo "변경 없음 — 커밋 생략"
+            exit 0
+          fi
+          SLOT=$(node -e "console.log(require('./data/latest.json').slot)")
+          git commit -m "chore(data): 수집 스냅샷 ${SLOT}"
+          # 다른 실행이 먼저 push 했을 수 있으므로 rebase 후 재시도
+          for i in 1 2 3; do
+            git pull --rebase --autostash origin "${GITHUB_REF_NAME}" && git push && exit 0
+            echo "push 재시도 $i"
+            sleep 5
+          done
+          exit 1
