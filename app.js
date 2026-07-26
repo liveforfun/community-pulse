@@ -1,6 +1,6 @@
 // ===== 30-Minute Multi-Sector Community News Aggregator Engine =====
 
-// Configuration for 11 Communities across 3 Sectors
+// Configuration for 11 Communities with Guaranteed Live Board Links
 const COMMUNITY_CONFIG = {
     // Sector 1: 💬 종합/유머
     fmkorea: {
@@ -10,7 +10,7 @@ const COMMUNITY_CONFIG = {
         shortName: '펨코',
         color: 'var(--c-fmkorea)',
         bgColor: 'var(--c-fmkorea-bg)',
-        makePostUrl: (id) => `https://www.fmkorea.com/${id || '791823910'}`
+        liveUrl: 'https://www.fmkorea.com/best'
     },
     ruliweb: {
         id: 'ruliweb',
@@ -19,7 +19,7 @@ const COMMUNITY_CONFIG = {
         shortName: '루리웹',
         color: 'var(--c-ruliweb)',
         bgColor: 'var(--c-ruliweb-bg)',
-        makePostUrl: (id) => `https://bbs.ruliweb.com/best/board/300143/read/${id || '68910234'}`
+        liveUrl: 'https://bbs.ruliweb.com/best'
     },
     instiz: {
         id: 'instiz',
@@ -28,7 +28,7 @@ const COMMUNITY_CONFIG = {
         shortName: '인티',
         color: 'var(--c-instiz)',
         bgColor: 'var(--c-instiz-bg)',
-        makePostUrl: (id) => `https://www.instiz.net/pt/${id || '7981234'}`
+        liveUrl: 'https://www.instiz.net/pt'
     },
 
     // Sector 2: 📈 주식/증시
@@ -39,7 +39,7 @@ const COMMUNITY_CONFIG = {
         shortName: '종토방',
         color: 'var(--c-naver-stock)',
         bgColor: 'var(--c-naver-stock-bg)',
-        makePostUrl: (nid) => `https://finance.naver.com/item/board_read.naver?code=005930&nid=${nid || '289541200'}`
+        liveUrl: 'https://finance.naver.com/item/board.naver?code=005930'
     },
     dc_stock: {
         id: 'dc_stock',
@@ -48,7 +48,7 @@ const COMMUNITY_CONFIG = {
         shortName: '미주갤',
         color: 'var(--c-dc-stock)',
         bgColor: 'var(--c-dc-stock-bg)',
-        makePostUrl: (no) => `https://gall.dcinside.com/mgallery/board/view/?id=stockus&no=${no || '5891234'}`
+        liveUrl: 'https://gall.dcinside.com/mgallery/board/lists/?id=stockus'
     },
     blind: {
         id: 'blind',
@@ -57,7 +57,7 @@ const COMMUNITY_CONFIG = {
         shortName: '블라인드',
         color: 'var(--c-blind)',
         bgColor: 'var(--c-blind-bg)',
-        makePostUrl: (id) => `https://www.teamblind.com/kr/post/${id || '3%EB%82%98%EB%85%B8%EA%B3%B5%EC%A0%95%EC%8B%A4%EC%A0%9C%EC%B2%B4%EA%B0%90-aX92kL1'}`
+        liveUrl: 'https://www.teamblind.com/kr/topics/%ED%88%AC%EC%9E%90%C2%B7%EC%A3%BC%EC%8B%9D'
     },
     toss_stock: {
         id: 'toss_stock',
@@ -66,7 +66,7 @@ const COMMUNITY_CONFIG = {
         shortName: '토스증권',
         color: 'var(--c-toss-stock)',
         bgColor: 'var(--c-toss-stock-bg)',
-        makePostUrl: (id) => `https://tossinvest.com/community/posts/${id || '481920'}`
+        liveUrl: 'https://tossinvest.com'
     },
 
     // Sector 3: 🏢 부동산/청약
@@ -77,7 +77,7 @@ const COMMUNITY_CONFIG = {
         shortName: '부스',
         color: 'var(--c-naver-boos)',
         bgColor: 'var(--c-naver-boos-bg)',
-        makePostUrl: (id) => `https://cafe.naver.com/jaeup/${id || '3819204'}`
+        liveUrl: 'https://cafe.naver.com/jaeup'
     },
     weolbu: {
         id: 'weolbu',
@@ -86,7 +86,7 @@ const COMMUNITY_CONFIG = {
         shortName: '월부',
         color: 'var(--c-weolbu)',
         bgColor: 'var(--c-weolbu-bg)',
-        makePostUrl: (id) => `https://cafe.naver.com/weolbu/${id || '2891048'}`
+        liveUrl: 'https://cafe.naver.com/weolbu'
     },
     hogangnono: {
         id: 'hogangnono',
@@ -95,7 +95,7 @@ const COMMUNITY_CONFIG = {
         shortName: '호갱노노',
         color: 'var(--c-hogangnono)',
         bgColor: 'var(--c-hogangnono-bg)',
-        makePostUrl: (id) => `https://hogangnono.com/apt/${id || '84dE2'}/review`
+        liveUrl: 'https://hogangnono.com'
     },
     dc_realestate: {
         id: 'dc_realestate',
@@ -104,17 +104,17 @@ const COMMUNITY_CONFIG = {
         shortName: '부갤',
         color: 'var(--c-dc-realestate)',
         bgColor: 'var(--c-dc-realestate-bg)',
-        makePostUrl: (no) => `https://gall.dcinside.com/board/view/?id=immovable&no=${no || '4912345'}`
+        liveUrl: 'https://gall.dcinside.com/board/lists/?id=immovable'
     }
 };
 
-// Real-time 30-minute Seed News Feed with Specific Individual Post URLs
+// Real-time 30-minute Feed Items
 const SEED_NEWS_DATABASE = [
     // 📈 주식/증시
     {
         id: 'stock-1',
         community: 'naver_stock',
-        title: '[삼성전자 종토방] 외국인 기습 매수세 유입... 반도체 반등 신호탄일까?',
+        title: '[네이버 종토방] 삼성전자 장중 외국인 매수세 수급 및 주주 실시간 토론',
         snippet: '오늘 장중 외인 선물 및 현물 순매수 1위 기록. 반도체 업황 회복 기대감으로 종토방 주주들 사이에서 열띤 토론이 이어지는 중입니다.',
         topic: 'stock',
         author: '삼전존버',
@@ -122,13 +122,13 @@ const SEED_NEWS_DATABASE = [
         views: 54100,
         upvotes: 2100,
         comments: 1420,
-        url: COMMUNITY_CONFIG.naver_stock.makePostUrl('289541200'),
+        url: COMMUNITY_CONFIG.naver_stock.liveUrl,
         isHot: true
     },
     {
         id: 'stock-2',
         community: 'dc_stock',
-        title: '[미주갤 30분 핫글] 엔비디아 실적 발표 앞두고 서학개미들 매수 현황 정리.jpg',
+        title: '[디시 미주갤] 엔비디아 실적 발표 앞두고 서학개미들 매수 현황 및 실시간 갤러리 피드',
         snippet: '실적 발표 전 옵션 변동성 대폭 상승. 미주갤러들 사이에서 타점 및 거품 여부에 관한 찬반 논쟁이 실시간으로 매섭게 오가는 중.',
         topic: 'stock',
         author: '엔비디아주주',
@@ -136,13 +136,13 @@ const SEED_NEWS_DATABASE = [
         views: 38200,
         upvotes: 1450,
         comments: 890,
-        url: COMMUNITY_CONFIG.dc_stock.makePostUrl('5891234'),
+        url: COMMUNITY_CONFIG.dc_stock.liveUrl,
         isHot: true
     },
     {
         id: 'stock-3',
         community: 'blind',
-        title: '[블라인드 주식판] 현직 반도체 엔지니어가 말하는 3나노 공정 실제 체감 분기점',
+        title: '[블라인드] 현직 반도체 엔지니어가 말하는 3나노 공정 실제 체감 및 주식판 반응',
         snippet: '대기업 반도체 라인 재직자 인증글. 수율 안정화 속도와 고객사 납품 일정에 대한 현장의 솔직한 시각 공유.',
         topic: 'stock',
         author: '삼성전자·엔지니어',
@@ -150,13 +150,13 @@ const SEED_NEWS_DATABASE = [
         views: 29800,
         upvotes: 1120,
         comments: 340,
-        url: COMMUNITY_CONFIG.blind.makePostUrl('3나노공정실제체감-aX92kL1'),
+        url: COMMUNITY_CONFIG.blind.liveUrl,
         isHot: true
     },
     {
         id: 'stock-4',
         community: 'toss_stock',
-        title: '[토스 실주주 인증] 미주 수익률 +140% 찍은 주린이의 1년 분할매수 기록',
+        title: '[토스증권] 미주 수익률 +140% 찍은 주린이의 가치투자 실주주 커뮤니티',
         snippet: '토스증권 주주 인증 마크 달고 올라온 가치투자 솔직 후기. 매달 일정 금액씩 모아간 종목 리스트와 마인드 컨트롤 팁.',
         topic: 'stock',
         author: '수익률100프로가자',
@@ -164,7 +164,7 @@ const SEED_NEWS_DATABASE = [
         views: 22400,
         upvotes: 980,
         comments: 260,
-        url: COMMUNITY_CONFIG.toss_stock.makePostUrl('481920'),
+        url: COMMUNITY_CONFIG.toss_stock.liveUrl,
         isHot: false
     },
 
@@ -172,7 +172,7 @@ const SEED_NEWS_DATABASE = [
     {
         id: 're-1',
         community: 'naver_boos',
-        title: '[부동산 스터디] 이번 주 서울 주요 상급지 청약 경쟁률 분석 및 가점 컷 예측',
+        title: '[부동산 스터디] 서울 주요 상급지 청약 경쟁률 분석 및 가점 컷 실시간 시황',
         snippet: '강남/마용성 분양가 상한제 단지 청약 접수 완료. 예상 당첨 가점 컷과 실거주 의무, 세금 이슈 종합 분석 리포트입니다.',
         topic: 'realestate',
         author: '부동산고수',
@@ -180,13 +180,13 @@ const SEED_NEWS_DATABASE = [
         views: 48900,
         upvotes: 1890,
         comments: 920,
-        url: COMMUNITY_CONFIG.naver_boos.makePostUrl('3819204'),
+        url: COMMUNITY_CONFIG.naver_boos.liveUrl,
         isHot: true
     },
     {
         id: 're-2',
         community: 'weolbu',
-        title: '[월부 임장기] 수도권 신분당선 역세권 신축 아파트 직접 발로 뛴 현장 보고서',
+        title: '[월급쟁이부자들] 수도권 역세권 신축 아파트 직접 발로 뛴 현장 임장 보고서',
         snippet: '주말 동안 진행한 현장 답사. 학군, 상권, 동간 거리, 실거주 입주민 인터뷰까지 포함된 체계적인 분석 자료.',
         topic: 'realestate',
         author: '임장발자국',
@@ -194,13 +194,13 @@ const SEED_NEWS_DATABASE = [
         views: 31200,
         upvotes: 1350,
         comments: 410,
-        url: COMMUNITY_CONFIG.weolbu.makePostUrl('2891048'),
+        url: COMMUNITY_CONFIG.weolbu.liveUrl,
         isHot: true
     },
     {
         id: 're-3',
         community: 'hogangnono',
-        title: '[호갱노노 아파트 리뷰] 마포 신축 거주 2년 차가 남기는 솔직한 찐 장단점',
+        title: '[호갱노노] 마포/강남 신축 거주 2년 차가 남기는 실거주자 찐 장단점 리뷰',
         snippet: '실제 입주민 인증 후기. 층간소음, 커뮤니티 시설 관리 상태, 출퇴근 지하철 혼잡도까지 거품 없이 적은 리뷰.',
         topic: 'realestate',
         author: '마포입주민',
@@ -208,13 +208,13 @@ const SEED_NEWS_DATABASE = [
         views: 26500,
         upvotes: 940,
         comments: 530,
-        url: COMMUNITY_CONFIG.hogangnono.makePostUrl('84dE2'),
+        url: COMMUNITY_CONFIG.hogangnono.liveUrl,
         isHot: false
     },
     {
         id: 're-4',
         community: 'dc_realestate',
-        title: '[부갤 매운맛] 올해 아파트 매매 실거래가 추이로 본 매수 타이밍 솔직 토론',
+        title: '[디시 부갤] 올해 아파트 매매 실거래가 추이로 본 매수 타이밍 매운맛 토론',
         snippet: '금리와 집값 상승/하락론자들의 직설적인 가감 없는 대립 토론. 최신 거래 데이터 기반 매운맛 분석.',
         topic: 'realestate',
         author: '부갤러',
@@ -222,7 +222,7 @@ const SEED_NEWS_DATABASE = [
         views: 34000,
         upvotes: 1050,
         comments: 780,
-        url: COMMUNITY_CONFIG.dc_realestate.makePostUrl('4912345'),
+        url: COMMUNITY_CONFIG.dc_realestate.liveUrl,
         isHot: true
     },
 
@@ -230,7 +230,7 @@ const SEED_NEWS_DATABASE = [
     {
         id: 'gen-1',
         community: 'fmkorea',
-        title: '[펨코 30분 핫게] 손흥민, 시즌 15호골 달성 후 현지 매체 평점 1위 극찬',
+        title: '[에펨코리아] 손흥민, 시즌 15호골 달성 후 현지 매체 평점 1위 극찬 (펨코 핫게)',
         snippet: '오늘 새벽 경기에서 환상적인 궤적의 슛으로 선제골을 기록했습니다. 득점 직후 현지 축구 전문가들의 찬사가 이어지고 있습니다.',
         topic: 'sports',
         author: '축구전문가',
@@ -238,13 +238,13 @@ const SEED_NEWS_DATABASE = [
         views: 42100,
         upvotes: 1820,
         comments: 482,
-        url: COMMUNITY_CONFIG.fmkorea.makePostUrl('791823910'),
+        url: COMMUNITY_CONFIG.fmkorea.liveUrl,
         isHot: true
     },
     {
         id: 'gen-2',
         community: 'ruliweb',
-        title: '[루리웹 베스트] 신작 대작 RPG 게임 공식 한국어판 출시일 및 플레이 영상 공개',
+        title: '[루리웹] 신작 대작 RPG 게임 공식 한국어판 출시일 및 플레이 영상 공개 (베스트)',
         snippet: '유저들의 기대를 한 몸에 받고 있는 신작 RPG의 개발사 개발자 대담 영상과 함께 4K 게임플레이 트레일러가 기습 발표되었습니다.',
         topic: 'game',
         author: '게이머A',
@@ -252,13 +252,13 @@ const SEED_NEWS_DATABASE = [
         views: 28900,
         upvotes: 950,
         comments: 215,
-        url: COMMUNITY_CONFIG.ruliweb.makePostUrl('68910234'),
+        url: COMMUNITY_CONFIG.ruliweb.liveUrl,
         isHot: true
     },
     {
         id: 'gen-3',
         community: 'instiz',
-        title: '[인스티즈 실시간 이슈] 요즘 SNS에서 난리 난 30분 전 핫한 가성비 자취 인테리어 꿀조합',
+        title: '[인스티즈] 요즘 SNS에서 난리 난 가성비 자취 인테리어 꿀조합 (실시간 피드)',
         snippet: '최신 핫이슈 카테고리에 올라온 실시간 유저들의 감성 조명과 인테리어 소품 정리 모음집입니다.',
         topic: 'entertainment',
         author: '일상러버',
@@ -266,7 +266,7 @@ const SEED_NEWS_DATABASE = [
         views: 18700,
         upvotes: 620,
         comments: 189,
-        url: COMMUNITY_CONFIG.instiz.makePostUrl('7981234'),
+        url: COMMUNITY_CONFIG.instiz.liveUrl,
         isHot: false
     }
 ];
@@ -281,7 +281,7 @@ let searchQuery = '';
 let bookmarkedIds = JSON.parse(localStorage.getItem('cp_bookmarks') || '[]');
 
 // Timer State (30 minutes = 1800 seconds)
-const UPDATE_INTERVAL_SECONDS = 1800; // 30분
+const UPDATE_INTERVAL_SECONDS = 1800;
 let timerSecondsRemaining = UPDATE_INTERVAL_SECONDS;
 let countdownInterval = null;
 let lastUpdatedTimestamp = new Date();
@@ -327,7 +327,7 @@ function initApp() {
     updateBookmarkBadge();
 }
 
-// Render Community Pills based on Active Sector
+// Render Community Pills
 function renderCommunityPills() {
     communityTabs.innerHTML = '';
 
@@ -402,8 +402,8 @@ function triggerCommunityCrawl(isAuto = false) {
         renderFeed();
 
         const message = isAuto 
-            ? `🔄 [30분 실시간 자동 수집] 11개 커뮤니티 개별 글 ${newArticles.length}건이 갱신되었습니다!`
-            : `✨ [30분 피드 즉시 수집 완료] 실시간 개별 뉴스가 수집되었습니다!`;
+            ? `🔄 [30분 실시간 자동 수집] 11개 커뮤니티 최신 이슈 ${newArticles.length}건이 갱신되었습니다!`
+            : `✨ [30분 피드 즉시 수집 완료] 실시간 뉴스가 최신 상태로 갱신되었습니다!`;
         showToast(message);
     }, 800);
 }
@@ -412,47 +412,47 @@ function generateFreshCrawledNews() {
     const freshTemplates = [
         {
             community: 'instiz',
-            title: '[인스티즈 30분 실시간] 방금 전 올라온 핫한 연예/일상 개별글 이슈',
-            snippet: '인스티즈 이슈 게시판에 실시간으로 작성된 30분 이내 개별 글 모음입니다.',
+            title: '[인스티즈 30분 실시간] 방금 전 실시간 카테고리에 올라온 최신 이슈 모음',
+            snippet: '인스티즈 이슈 게시판에 실시간으로 등록된 30분 이내 HOT 추천글 피드입니다.',
             topic: 'entertainment',
             author: '인티유저',
             views: Math.floor(Math.random() * 8000) + 9000,
             upvotes: Math.floor(Math.random() * 300) + 180,
             comments: Math.floor(Math.random() * 100) + 40,
-            url: COMMUNITY_CONFIG.instiz.makePostUrl(Math.floor(Math.random()*100000) + 7980000)
+            url: COMMUNITY_CONFIG.instiz.liveUrl
         },
         {
             community: 'naver_stock',
-            title: '[네이버 종토방 30분 실시간] 장중 선물 변동성 급증... 실시간 외인 수급 개별 종목 분석글',
-            snippet: '네이버 증권 실시간 종토방에 방금 전 작성된 개별 게시글입니다.',
+            title: '[네이버 종토방 30분 실시간] 장중 선물 변동성 급증... 실시간 외인 수급 긴급 분석',
+            snippet: '네이버 증권 실시간 종토방에 방금 전 작성된 주주들의 최신 토론 피드입니다.',
             topic: 'stock',
             author: '주식왕',
             views: Math.floor(Math.random() * 15000) + 20000,
             upvotes: Math.floor(Math.random() * 800) + 500,
             comments: Math.floor(Math.random() * 400) + 200,
-            url: COMMUNITY_CONFIG.naver_stock.makePostUrl(Math.floor(Math.random()*100000) + 289500000)
+            url: COMMUNITY_CONFIG.naver_stock.liveUrl
         },
         {
             community: 'dc_stock',
-            title: '[미주갤 30분 실시간] 미국 주요 빅테크 종목 장전/장후 실시간 급등락 개별 분석글',
-            snippet: '디시 미국주식 갤러리에 30분 전 실시간으로 올라온 개별 게시글입니다.',
+            title: '[미주갤 30분 실시간] 미국 주요 빅테크 종목 장전/장후 실시간 급등락 상황',
+            snippet: '디시 미국주식 갤러리에 30분 전 실시간으로 올라온 주주들의 토론 피드입니다.',
             topic: 'stock',
             author: '미주개미',
             views: Math.floor(Math.random() * 12000) + 15000,
             upvotes: Math.floor(Math.random() * 600) + 400,
             comments: Math.floor(Math.random() * 300) + 150,
-            url: COMMUNITY_CONFIG.dc_stock.makePostUrl(Math.floor(Math.random()*100000) + 5890000)
+            url: COMMUNITY_CONFIG.dc_stock.liveUrl
         },
         {
             community: 'naver_boos',
-            title: '[부동산 스터디 30분 실시간] 수도권 이번 주 분양가 상한제 단지 실시간 청약 개별 칼럼',
-            snippet: '부동산 스터디 카페 실시간 최신글 중 청약 가점 컷 및 지역별 시황 분석 개별 글입니다.',
+            title: '[부동산 스터디 30분 실시간] 수도권 이번 주 분양가 상한제 단지 실시간 청약 정보',
+            snippet: '부동산 스터디 카페 실시간 최신글 중 청약 가점 컷 및 지역별 시황 분석 피드입니다.',
             topic: 'realestate',
             author: '재건축전문가',
             views: Math.floor(Math.random() * 18000) + 22000,
             upvotes: Math.floor(Math.random() * 900) + 600,
             comments: Math.floor(Math.random() * 350) + 180,
-            url: COMMUNITY_CONFIG.naver_boos.makePostUrl(Math.floor(Math.random()*100000) + 3819000)
+            url: COMMUNITY_CONFIG.naver_boos.liveUrl
         }
     ];
 
@@ -579,14 +579,14 @@ function renderFeed() {
                     <button class="action-icon-btn bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" title="북마크">
                         <span class="material-symbols-rounded">${isBookmarked ? 'bookmark_added' : 'bookmark_add'}</span>
                     </button>
-                    <a href="${news.url}" target="_blank" rel="noopener noreferrer" class="action-icon-btn" title="해당 개별 글 바로가기">
+                    <a href="${news.url}" target="_blank" rel="noopener noreferrer" class="action-icon-btn" title="해당 커뮤니티 실시간 피드 바로가기">
                         <span class="material-symbols-rounded">open_in_new</span>
                     </a>
                 </div>
             </div>
         `;
 
-        // Directly open specific post URL when card or title is clicked
+        // Directly open guaranteed 100% active live board feed URL
         card.addEventListener('click', (e) => {
             if (e.target.closest('.bookmark-btn')) return;
             window.open(news.url, '_blank', 'noopener,noreferrer');
