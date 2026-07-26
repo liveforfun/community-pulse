@@ -1,6 +1,6 @@
 // ===== 30-Minute Multi-Sector Community News Aggregator Engine =====
 
-// Configuration for 12 Communities across 3 Sectors with Live Real-time Feeds
+// Configuration for 11 Communities across 3 Sectors with Live Real-time Feeds (더쿠 제외 완료)
 const COMMUNITY_CONFIG = {
     // Sector 1: 💬 종합/유머
     fmkorea: {
@@ -20,15 +20,6 @@ const COMMUNITY_CONFIG = {
         color: 'var(--c-ruliweb)',
         bgColor: 'var(--c-ruliweb-bg)',
         liveFeedUrl: 'https://bbs.ruliweb.com/best'
-    },
-    theqoo: {
-        id: 'theqoo',
-        sector: 'general',
-        name: '더쿠',
-        shortName: '더쿠',
-        color: 'var(--c-theqoo)',
-        bgColor: 'var(--c-theqoo-bg)',
-        liveFeedUrl: 'https://theqoo.net/square'
     },
     instiz: {
         id: 'instiz',
@@ -131,7 +122,7 @@ const SEED_NEWS_DATABASE = [
         views: 54100,
         upvotes: 2100,
         comments: 1420,
-        url: 'https://finance.naver.com/item/board.naver?code=005930',
+        url: COMMUNITY_CONFIG.naver_stock.liveFeedUrl,
         isHot: true
     },
     {
@@ -145,7 +136,7 @@ const SEED_NEWS_DATABASE = [
         views: 38200,
         upvotes: 1450,
         comments: 890,
-        url: 'https://gall.dcinside.com/mgallery/board/lists/?id=stockus',
+        url: COMMUNITY_CONFIG.dc_stock.liveFeedUrl,
         isHot: true
     },
     {
@@ -159,7 +150,7 @@ const SEED_NEWS_DATABASE = [
         views: 29800,
         upvotes: 1120,
         comments: 340,
-        url: 'https://www.teamblind.com/kr/topics/%ED%88%AC%EC%9E%90%C2%B7%EC%A3%BC%EC%8B%9D',
+        url: COMMUNITY_CONFIG.blind.liveFeedUrl,
         isHot: true
     },
     {
@@ -173,7 +164,7 @@ const SEED_NEWS_DATABASE = [
         views: 22400,
         upvotes: 980,
         comments: 260,
-        url: 'https://tossinvest.com',
+        url: COMMUNITY_CONFIG.toss_stock.liveFeedUrl,
         isHot: false
     },
 
@@ -189,7 +180,7 @@ const SEED_NEWS_DATABASE = [
         views: 48900,
         upvotes: 1890,
         comments: 920,
-        url: 'https://cafe.naver.com/jaeup',
+        url: COMMUNITY_CONFIG.naver_boos.liveFeedUrl,
         isHot: true
     },
     {
@@ -203,7 +194,7 @@ const SEED_NEWS_DATABASE = [
         views: 31200,
         upvotes: 1350,
         comments: 410,
-        url: 'https://cafe.naver.com/weolbu',
+        url: COMMUNITY_CONFIG.weolbu.liveFeedUrl,
         isHot: true
     },
     {
@@ -217,7 +208,7 @@ const SEED_NEWS_DATABASE = [
         views: 26500,
         upvotes: 940,
         comments: 530,
-        url: 'https://hogangnono.com',
+        url: COMMUNITY_CONFIG.hogangnono.liveFeedUrl,
         isHot: false
     },
     {
@@ -231,7 +222,7 @@ const SEED_NEWS_DATABASE = [
         views: 34000,
         upvotes: 1050,
         comments: 780,
-        url: 'https://gall.dcinside.com/board/lists/?id=immovable',
+        url: COMMUNITY_CONFIG.dc_realestate.liveFeedUrl,
         isHot: true
     },
 
@@ -247,7 +238,7 @@ const SEED_NEWS_DATABASE = [
         views: 42100,
         upvotes: 1820,
         comments: 482,
-        url: 'https://www.fmkorea.com/best',
+        url: COMMUNITY_CONFIG.fmkorea.liveFeedUrl,
         isHot: true
     },
     {
@@ -261,35 +252,21 @@ const SEED_NEWS_DATABASE = [
         views: 28900,
         upvotes: 950,
         comments: 215,
-        url: 'https://bbs.ruliweb.com/best',
+        url: COMMUNITY_CONFIG.ruliweb.liveFeedUrl,
         isHot: true
     },
     {
         id: 'gen-3',
-        community: 'theqoo',
-        title: '[더쿠 스퀘어] 오늘 자 빌보드 차트 1위 기록한 인기 걸그룹 신곡 반응 요약.txt',
-        snippet: '해외 음악 평론가들과 국내 음악 커뮤니티에서 대호평을 받고 있는 신곡의 음원 성적과 수록곡 무대 모음입니다.',
-        topic: 'entertainment',
-        author: 'KPOP러버',
-        minutesAgo: 13,
-        views: 35400,
-        upvotes: 1200,
-        comments: 630,
-        url: 'https://theqoo.net/square',
-        isHot: true
-    },
-    {
-        id: 'gen-4',
         community: 'instiz',
         title: '[인스티즈 실시간 이슈] 요즘 SNS에서 난리 난 30분 전 핫한 가성비 자취 인테리어 꿀조합',
         snippet: '최신 핫이슈 카테고리에 올라온 실시간 유저들의 감성 조명과 인테리어 소품 정리 모음집입니다.',
         topic: 'entertainment',
         author: '일상러버',
-        minutesAgo: 19,
+        minutesAgo: 15,
         views: 18700,
         upvotes: 620,
         comments: 189,
-        url: 'https://www.instiz.net/pt',
+        url: COMMUNITY_CONFIG.instiz.liveFeedUrl,
         isHot: false
     }
 ];
@@ -436,7 +413,7 @@ function triggerCommunityCrawl(isAuto = false) {
         renderFeed();
 
         const message = isAuto 
-            ? `🔄 [30분 실시간 자동 수집] 12개 커뮤니티 최신 이슈 ${newArticles.length}건이 갱신되었습니다!`
+            ? `🔄 [30분 실시간 자동 수집] 11개 커뮤니티 최신 이슈 ${newArticles.length}건이 갱신되었습니다!`
             : `✨ [30분 피드 즉시 수집 완료] 실시간 커뮤니티 뉴스가 수집되었습니다!`;
         showToast(message);
     }, 800);
@@ -444,7 +421,6 @@ function triggerCommunityCrawl(isAuto = false) {
 
 function generateFreshCrawledNews() {
     const freshTemplates = [
-        // 인스티즈 실시간 피드
         {
             community: 'instiz',
             title: '[인스티즈 30분 실시간] 방금 전 실시간 카테고리에 올라온 핫한 이슈 및 실시간 반응 모음',
@@ -456,7 +432,6 @@ function generateFreshCrawledNews() {
             comments: Math.floor(Math.random() * 100) + 40,
             url: COMMUNITY_CONFIG.instiz.liveFeedUrl
         },
-        // 주식
         {
             community: 'naver_stock',
             title: '[네이버 종토방 30분 실시간] 장중 선물 변동성 급증... 실시간 외인 수급 긴급 분석',
@@ -479,7 +454,6 @@ function generateFreshCrawledNews() {
             comments: Math.floor(Math.random() * 300) + 150,
             url: COMMUNITY_CONFIG.dc_stock.liveFeedUrl
         },
-        // 부동산
         {
             community: 'naver_boos',
             title: '[부동산 스터디 30분 실시간] 수도권 이번 주 분양가 상한제 단지 실시간 청약 정보',
@@ -521,6 +495,7 @@ function renderTrendingKeywords() {
 function renderFeed() {
     let filtered = newsDatabase.filter(news => {
         const commConfig = COMMUNITY_CONFIG[news.community];
+        if (!commConfig) return false;
 
         if (activeSector !== 'all' && commConfig.sector !== activeSector) {
             return false;
