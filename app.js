@@ -131,6 +131,30 @@ function renderCommunityPills() {
 function renderSourceStatus() {
     if (!state.snapshot) return;
 
+    // 일별 요약은 하루치 집계이므로 슬롯 단위 상태와 표기가 다르다
+    if (state.snapshot.isDaily) {
+        const chips = (state.snapshot.sourceSummary || []).map(s => {
+            const total = s.okCount + s.emptyCount + s.blockedCount + s.errorCount;
+            const cls = s.okCount === total ? 'ok' : s.okCount === 0 ? 'error' : 'warn';
+            return (
+                '<div class="source-chip ' + cls + '">' +
+                '<span class="source-name">' + escapeHtml(s.name) + '</span>' +
+                '<span class="source-state">' + s.okCount + '/' + total + ' 회 정상</span>' +
+                '<span class="source-count">누적 ' + s.itemCountTotal.toLocaleString() + '건</span>' +
+                '</div>'
+            );
+        });
+
+        el.sourceStatus.innerHTML =
+            '<div class="source-status-head">' +
+            '<span class="material-symbols-rounded">calendar_month</span>' +
+            '<strong>' + escapeHtml(state.snapshot.date) + ' 일별 요약</strong>' +
+            '<span class="source-status-sum">' + state.snapshot.snapshotCount + '개 수집 집계</span>' +
+            '</div>' +
+            '<div class="source-chips">' + chips.join('') + '</div>';
+        return;
+    }
+
     const items = state.snapshot.sources.map(s => {
         const label = STATUS_LABEL[s.status] || { text: s.status, cls: 'warn' };
         const provides = [];
@@ -189,9 +213,15 @@ function renderFeed() {
     el.activeFilterName.textContent =
         filterName + ' · 조회수+댓글수 기준 TOP ' + TOP_N;
 
-    el.newsTotalCount.textContent = state.snapshot
-        ? state.snapshot.itemCount + '개 글 → ' + state.snapshot.clusterCount + '개 그룹'
-        : '-';
+    if (!state.snapshot) {
+        el.newsTotalCount.textContent = '-';
+    } else if (state.snapshot.isDaily) {
+        el.newsTotalCount.textContent =
+            '하루 누적 ' + state.snapshot.itemCount.toLocaleString() + '건 중 최고 화제글';
+    } else {
+        el.newsTotalCount.textContent =
+            state.snapshot.itemCount + '개 글 → ' + state.snapshot.clusterCount + '개 그룹';
+    }
 
     if (clusters.length === 0) {
         el.newsGrid.innerHTML =
@@ -303,44 +333,75 @@ function renderTrendingKeywords() {
 function renderSnapshotSelect() {
     if (!state.index) return;
 
-    el.snapshotSelect.innerHTML = state.index.slots
+    const slotOptions = state.index.slots
         .map(s =>
             '<option value="' + escapeHtml(s.path) + '"' +
-            (state.snapshot && state.snapshot.slot === s.slot ? ' selected' : '') + '>' +
+            (state.snapshot && !state.snapshot.isDaily && state.snapshot.slot === s.slot ? ' selected' : '') + '>' +
             formatSlot(s.slot) + ' (' + s.okSources + '/' + s.totalSources + ' 정상, ' + s.itemCount + '건)' +
             '</option>'
         )
         .join('');
+
+    const dayOptions = (state.index.days || [])
+        .map(d =>
+            '<option value="' + escapeHtml(d.path) + '"' +
+            (state.snapshot && state.snapshot.isDaily && state.snapshot.date === d.date ? ' selected' : '') + '>' +
+            d.date + ' 요약 (' + d.snapshotCount + '회 수집)' +
+            '</option>'
+        )
+        .join('');
+
+    el.snapshotSelect.innerHTML =
+        '<optgroup label="30분 단위 원본 (최근 ' + (state.index.retentionDays || 7) + '일)">' + slotOptions + '</optgroup>' +
+        (dayOptions ? '<optgroup label="일별 요약 (영구 보존)">' + dayOptions + '</optgroup>' : '');
 }
 
 function renderTimeline() {
     if (!state.index) return;
 
     const slots = state.index.slots;
-    el.timelineSub.textContent =
-        '누적 ' + slots.length + '개 스냅샷 · ' + (state.index.retentionDays || 7) + '일 보관';
+    const days = state.index.days || [];
 
-    if (slots.length === 0) {
+    el.timelineSub.textContent =
+        '원본 ' + slots.length + '개(최근 ' + (state.index.retentionDays || 7) + '일) · 일별 요약 ' + days.length + '일(영구 보존)';
+
+    if (slots.length === 0 && days.length === 0) {
         el.timelineList.innerHTML = '<div class="empty-state"><p>아직 누적된 스냅샷이 없습니다.</p></div>';
         return;
     }
 
-    el.timelineList.innerHTML = slots
-        .slice(0, 48)
-        .map(s => {
-            const active = state.snapshot && state.snapshot.slot === s.slot;
-            return (
-                '<button class="timeline-row' + (active ? ' active' : '') + '" data-path="' + escapeHtml(s.path) + '">' +
-                '<span class="timeline-time">' + formatSlot(s.slot) + '</span>' +
-                '<span class="timeline-top1">' + escapeHtml(s.top1 || '수집 결과 없음') + '</span>' +
-                '<span class="timeline-meta">' + s.itemCount + '건 · ' + s.okSources + '/' + s.totalSources + '</span>' +
-                '</button>'
-            );
-        })
-        .join('');
+    const slotRows = slots.slice(0, 48).map(s => {
+        const active = state.snapshot && !state.snapshot.isDaily && state.snapshot.slot === s.slot;
+        return (
+            '<button class="timeline-row' + (active ? ' active' : '') + '" data-path="' + escapeHtml(s.path) + '" data-kind="slot">' +
+            '<span class="timeline-time">' + formatSlot(s.slot) + '</span>' +
+            '<span class="timeline-top1">' + escapeHtml(s.top1 || '수집 결과 없음') + '</span>' +
+            '<span class="timeline-meta">' + s.itemCount + '건 · ' + s.okSources + '/' + s.totalSources + '</span>' +
+            '</button>'
+        );
+    });
+
+    const dayRows = days.map(d => {
+        const active = state.snapshot && state.snapshot.isDaily && state.snapshot.date === d.date;
+        return (
+            '<button class="timeline-row daily' + (active ? ' active' : '') + '" data-path="' + escapeHtml(d.path) + '" data-kind="daily">' +
+            '<span class="timeline-time">' + escapeHtml(d.date.slice(5)) + '</span>' +
+            '<span class="timeline-top1">' + escapeHtml(d.top1 || '수집 결과 없음') + '</span>' +
+            '<span class="timeline-meta">' + d.snapshotCount + '회 · 누적 ' + d.itemCountTotal.toLocaleString() + '건</span>' +
+            '</button>'
+        );
+    });
+
+    el.timelineList.innerHTML =
+        '<div class="timeline-group-label">30분 단위 원본</div>' +
+        (slotRows.length ? slotRows.join('') : '<div class="timeline-none">없음</div>') +
+        (dayRows.length
+            ? '<div class="timeline-group-label">일별 요약 · 영구 보존</div>' + dayRows.join('')
+            : '');
 
     Array.from(el.timelineList.querySelectorAll('.timeline-row')).forEach(row => {
-        row.onclick = () => loadSnapshot(row.dataset.path);
+        row.onclick = () =>
+            row.dataset.kind === 'daily' ? loadDaily(row.dataset.path) : loadSnapshot(row.dataset.path);
     });
 }
 
@@ -351,6 +412,15 @@ function renderTimeline() {
 
 function updateCountdown() {
     if (!state.snapshot) return;
+
+    // 일별 요약을 보고 있을 때는 다음 수집까지의 카운트다운이 의미가 없다
+    if (state.snapshot.isDaily) {
+        el.lastUpdatedTime.textContent =
+            state.snapshot.date + ' 하루치 요약 · ' + state.snapshot.snapshotCount + '회 수집분';
+        el.countdownDisplay.textContent = '요약';
+        el.timerProgressBar.style.width = '100%';
+        return;
+    }
 
     const captured = new Date(state.snapshot.capturedAt);
     const elapsedMin = (Date.now() - captured.getTime()) / 60000;
@@ -382,6 +452,32 @@ async function loadSnapshot(path) {
         renderAll();
     } catch (err) {
         toast('스냅샷을 불러오지 못했습니다: ' + err.message);
+    }
+}
+
+/**
+ * 일별 요약을 불러온다. 30분 스냅샷과 형태가 달라 렌더 경로가 공유되도록 맞춰준다.
+ * (요약에는 전체 클러스터가 없고 그날의 TOP 3 만 있다 — 용량 통제를 위한 의도된 손실)
+ */
+async function loadDaily(path) {
+    try {
+        const daily = await fetchJson('data/' + path);
+        state.snapshot = {
+            isDaily: true,
+            date: daily.date,
+            slot: daily.date,
+            capturedAt: daily.lastCapturedAt,
+            snapshotCount: daily.snapshotCount,
+            itemCount: daily.itemCountTotal,
+            clusterCount: daily.top.length,
+            sourceSummary: daily.sourceSummary,
+            sources: [],
+            clusters: daily.top,
+            top: daily.top
+        };
+        renderAll();
+    } catch (err) {
+        toast('일별 요약을 불러오지 못했습니다: ' + err.message);
     }
 }
 
@@ -429,7 +525,10 @@ function initApp() {
         }
     };
 
-    el.snapshotSelect.onchange = e => loadSnapshot(e.target.value);
+    el.snapshotSelect.onchange = e => {
+        const value = e.target.value;
+        return value.indexOf('daily/') === 0 ? loadDaily(value) : loadSnapshot(value);
+    };
 
     el.searchInput.oninput = e => {
         state.query = e.target.value.trim();

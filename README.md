@@ -69,15 +69,17 @@ collector/
   http.js           https GET (UA·타임아웃·재시도·리다이렉트·요청 간 지연)
   cluster.js        제목 정규화 + bigram 자카드 유사도 클러스터링
   score.js          점수 계산 및 scoreBasis 판정
-  snapshot.js       스냅샷 기록 · 인덱스 갱신 · 보관 기간 프루닝
+  snapshot.js       스냅샷 기록 · 인덱스 갱신 · 보관 기간 프루닝(롤업 존재 시에만 삭제)
+  rollup.js         일별 요약 생성 (영구 보존 이력)
   sources/
     html.js         정규식 HTML 유틸 (태그 제거·엔티티 해제·숫자 추출)
     dcinside.js     주식갤·부동산갤 공용 파서
     fmkorea.js  ruliweb.js  instiz.js
 data/
   latest.json               최신 스냅샷 전문
-  index.json                스냅샷 슬롯 목록 (타임라인 UI 용)
-  snapshots/<날짜>/<HHmm>.json   30분 단위 누적 스냅샷
+  index.json                슬롯 목록 + 일별 요약 목록 (타임라인 UI 용)
+  snapshots/<날짜>/<HHmm>.json   30분 단위 누적 스냅샷 (7일 보관)
+  daily/<날짜>.json              일별 요약 (영구 보존)
 index.html  app.js  styles.css   정적 프론트엔드 (빌드 없음)
 .github/workflows/collect.yml    30분 cron
 ```
@@ -152,7 +154,44 @@ score = (totalViews ?? 0) + (totalComments ?? 0) × 100
 
 `status`: `ok` | `empty`(요청 성공·행 0건, 파서 파손 신호) | `blocked`(403/429/UA 게이팅) | `error`(요청 실패)
 
-**누적 정책**: 스냅샷은 덮어쓰지 않고 슬롯별로 쌓인다. 보관 기간은 **7일**(`collector/snapshot.js` 의 `RETENTION_DAYS`). 30분 주기면 하루 48개, 7일 336개로 상한이 걸린다. 초과분은 매 실행 시 디렉토리째 삭제되고 `index.json` 에서도 제거된다.
+## 누적 정책 — 원본 7일 + 일별 요약 영구 보존
+
+스냅샷은 덮어쓰지 않고 슬롯별로 쌓인다. 이력은 두 단계로 보관한다.
+
+| 단계 | 경로 | 보관 | 내용 |
+|---|---|---|---|
+| 30분 단위 원본 | `data/snapshots/<날짜>/<HHmm>.json` | **7일** | 수집한 글 전부(제목·URL·조회수·댓글수)와 전체 클러스터 |
+| 일별 요약 | `data/daily/<날짜>.json` | **영구** | 그날의 TOP 3(원문 링크 포함) + 슬롯 목록 + 소스별 집계 |
+
+30분 주기면 하루 48개 파일이 쌓인다. 원본을 영구 보관하면 1년에 17,500개 파일·커밋이 되어 저장소와 Actions 체크아웃이 무거워지므로, 7일이 지난 원본은 삭제하고 하루치를 요약 한 파일로 압축해 영구 보관한다.
+
+**삭제 순서가 보장된다.** `collector/snapshot.js` 의 `prune()` 은 **해당 날짜의 일별 요약이 존재할 때만** 원본을 삭제한다. 롤업이 없으면 원본을 남기고 다음 실행에서 재시도하므로, 롤업 실패로 이력이 사라지는 일은 없다.
+
+일별 요약 생성 규칙 (`collector/rollup.js`):
+- **완료된 날만** 대상이다. 오늘은 아직 수집이 진행 중이라 만들지 않는다.
+- 이미 요약이 있는 날은 다시 만들지 않는다(멱등).
+- 그날의 TOP 3 는 TOP 3 만 훑는 게 아니라 **모든 슬롯의 전체 클러스터를 후보로** 삼는다. 같은 글이 여러 슬롯에 등장하므로 정규화된 제목으로 중복을 합치고 **최고 점수를 기록한 시점(`peakSlot`)** 을 남긴다.
+- 요약에도 **원문 링크가 보존된다.** 다만 그날 수집한 글 전체 목록은 남지 않는다(TOP 3 만) — 용량 통제를 위한 의도된 손실이다.
+
+전체 글까지 영구 보존이 필요하면 `RETENTION_DAYS` 를 늘리거나 별도 DB 로 옮겨야 한다.
+
+일별 요약 스키마:
+```json
+{
+  "date": "2026-07-20", "kind": "daily",
+  "snapshotCount": 48,
+  "firstCapturedAt": "…", "lastCapturedAt": "…",
+  "itemCountTotal": 7968,
+  "top": [ { "rank": 1, "title": "…", "score": 108180, "peakSlot": "2026-07-20T21:30+09:00",
+             "totalViews": 73580, "totalComments": 346, "scoreBasis": "views+comments",
+             "memberCount": 1, "communities": ["instiz"], "items": [ { "url": "https://…" } ] } ],
+  "slots": [ { "slot": "…", "top1": "…", "itemCount": 166, "okSources": 5, "totalSources": 5 } ],
+  "sourceSummary": [ { "id": "fmkorea", "name": "에펨코리아", "okCount": 47,
+                       "emptyCount": 1, "blockedCount": 0, "errorCount": 0, "itemCountTotal": 1081 } ]
+}
+```
+
+UI 의 "누적 수집 이력" 섹션은 30분 단위 원본과 일별 요약을 구분해 보여주며, 상단 "수집 시점" 선택기에도 두 그룹이 나뉘어 표시된다.
 
 ## 자동 수집 설정
 

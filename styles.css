@@ -1490,3 +1490,37 @@ body {
             "metrics metrics";
     }
 }
+
+/* --- 일별 요약 이력 --- */
+.timeline-group-label {
+    margin: 10px 0 4px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #64748b;
+    text-transform: uppercase;
+}
+
+.timeline-group-label:first-child { margin-top: 0; }
+
+.timeline-none {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.timeline-row.daily {
+    background: rgba(56, 189, 248, 0.06);
+    border-color: rgba(56, 189, 248, 0.16);
+}
+
+.timeline-row.daily .timeline-time { color: #a78bfa; }
+
+.timeline-row.daily:hover {
+    border-color: rgba(167, 139, 250, 0.5);
+}
+
+.timeline-row.daily.active {
+    border-color: rgba(167, 139, 250, 0.8);
+    background: rgba(167, 139, 250, 0.12);
+}

@@ -3,6 +3,8 @@
 const fs = require('fs');
 const path = require('path');
 
+const rollup = require('./rollup');
+
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const SNAPSHOT_DIR = path.join(DATA_DIR, 'snapshots');
 
@@ -47,22 +49,33 @@ function writeJson(file, obj) {
     fs.writeFileSync(file, JSON.stringify(obj, null, 2) + '\n', 'utf8');
 }
 
-/** 보관 기간을 넘긴 스냅샷 디렉토리 삭제 */
+/**
+ * 보관 기간을 넘긴 30분 단위 원본 디렉토리를 삭제한다.
+ * **일별 요약(data/daily/<날짜>.json)이 존재하는 날만 삭제한다.** 요약이 없으면
+ * 그 날의 이력이 영구히 사라지므로, 롤업 실패 시 원본을 남겨 다음 실행에서 재시도하게 한다.
+ * @returns {{removed: string[], keptWithoutRollup: string[]}}
+ */
 function prune(nowDate) {
-    if (!fs.existsSync(SNAPSHOT_DIR)) return [];
+    if (!fs.existsSync(SNAPSHOT_DIR)) return { removed: [], keptWithoutRollup: [] };
 
     const cutoff = new Date(nowDate.getTime() - RETENTION_DAYS * 24 * 60 * 60 * 1000);
     const cutoffDay = slotOf(cutoff).day;
     const removed = [];
+    const keptWithoutRollup = [];
 
     for (const entry of fs.readdirSync(SNAPSHOT_DIR)) {
         if (!/^\d{4}-\d{2}-\d{2}$/.test(entry)) continue;
-        if (entry < cutoffDay) {
-            fs.rmSync(path.join(SNAPSHOT_DIR, entry), { recursive: true, force: true });
-            removed.push(entry);
+        if (entry >= cutoffDay) continue;
+
+        if (!rollup.hasDaily(DATA_DIR, entry)) {
+            keptWithoutRollup.push(entry);
+            continue;
         }
+
+        fs.rmSync(path.join(SNAPSHOT_DIR, entry), { recursive: true, force: true });
+        removed.push(entry);
     }
-    return removed;
+    return { removed, keptWithoutRollup };
 }
 
 /**
@@ -77,7 +90,10 @@ function save(snapshot) {
     writeJson(path.join(DATA_DIR, relPath), snapshot);
     writeJson(path.join(DATA_DIR, 'latest.json'), snapshot);
 
-    const removedDays = prune(now);
+    // 순서가 중요하다: 롤업을 먼저 만들고 나서 원본을 지운다.
+    const createdRollups = rollup.buildMissing(DATA_DIR, slot.day);
+    const pruned = prune(now);
+    const removedDays = pruned.removed;
 
     // 인덱스 갱신
     const index = readJson(path.join(DATA_DIR, 'index.json'), { slots: [] });
@@ -102,10 +118,18 @@ function save(snapshot) {
     writeJson(path.join(DATA_DIR, 'index.json'), {
         updatedAt: snapshot.capturedAt,
         retentionDays: RETENTION_DAYS,
-        slots: slots.slice(0, MAX_INDEX_SLOTS)
+        slots: slots.slice(0, MAX_INDEX_SLOTS),
+        // 일별 요약은 삭제하지 않는다 — 영구 보존 이력
+        days: rollup.listDaily(DATA_DIR)
     });
 
-    return { slot, relPath, removedDays };
+    return {
+        slot,
+        relPath,
+        removedDays,
+        keptWithoutRollup: pruned.keptWithoutRollup,
+        createdRollups
+    };
 }
 
 module.exports = { save, slotOf, prune, RETENTION_DAYS, DATA_DIR };

@@ -151,8 +151,15 @@ async function main() {
     console.log('슬롯      : ' + snapshot.slot);
     console.log('수집 건수 : ' + snapshot.itemCount + '건 → 클러스터 ' + clusterCount + '개');
     console.log('저장      : data/' + saved.relPath);
+    if (saved.createdRollups.length > 0) {
+        console.log('일별요약  : ' + saved.createdRollups.join(', ') + ' 생성 (영구 보존)');
+    }
     if (saved.removedDays.length > 0) {
-        console.log('보관정리  : ' + saved.removedDays.join(', ') + ' 삭제');
+        console.log('보관정리  : ' + saved.removedDays.join(', ') + ' 원본 삭제 (요약 보존됨)');
+    }
+    if (saved.keptWithoutRollup.length > 0) {
+        console.log('보관유지  : ' + saved.keptWithoutRollup.join(', ') +
+            ' — 일별 요약이 없어 원본을 지우지 않았다');
     }
     console.log('');
     console.log('TOP ' + TOP_N + ':');
