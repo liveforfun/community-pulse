@@ -1524,3 +1524,230 @@ body {
     border-color: rgba(167, 139, 250, 0.8);
     background: rgba(167, 139, 250, 0.12);
 }
+
+/* ===== 7일 키워드 시각화 =====
+   색 램프는 dataviz 검증기(ordinal · dark · surface #101622) 전 항목 PASS.
+   단일 블루 hue 의 명도 단계이며, 색은 글자 크기와 같은 값(노출량)을 중복 인코딩한다. */
+.viz-root {
+    --kw-1: #cde2fb;
+    --kw-2: #9ec5f4;
+    --kw-3: #6da7ec;
+    --kw-4: #3987e5;
+    --kw-5: #1c5cab;
+    --viz-grid: rgba(255, 255, 255, 0.07);
+}
+
+.keyword-section {
+    margin-top: 26px;
+    padding: 20px;
+    border-radius: 16px;
+}
+
+.viz-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+
+.viz-title-group { flex: 1 1 260px; }
+
+.viz-head h2 {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 1.02rem;
+    font-weight: 800;
+    color: #f1f5f9;
+}
+
+.viz-subtitle {
+    margin-top: 4px;
+    font-size: 0.78rem;
+    color: #94a3b8;
+}
+
+.viz-views {
+    display: flex;
+    gap: 4px;
+    padding: 3px;
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+}
+
+.viz-view-btn {
+    padding: 6px 14px;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: #94a3b8;
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.viz-view-btn:hover { color: #e2e8f0; }
+
+.viz-view-btn.active {
+    background: rgba(56, 189, 248, 0.16);
+    color: #38bdf8;
+}
+
+/* 크기·색이 같은 값을 나타낸다는 것을 밝히는 스케일 범례 */
+.viz-scale-legend {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+    font-size: 0.74rem;
+    color: #64748b;
+}
+
+.scale-swatch {
+    width: 22px;
+    height: 9px;
+    border-radius: 2px;
+    display: inline-block;
+}
+
+.scale-swatch.s1 { background: var(--kw-1); }
+.scale-swatch.s2 { background: var(--kw-2); }
+.scale-swatch.s3 { background: var(--kw-3); }
+.scale-swatch.s4 { background: var(--kw-4); }
+.scale-swatch.s5 { background: var(--kw-5); }
+
+.scale-note {
+    margin-left: 6px;
+    color: #52607a;
+}
+
+.viz-panel {
+    position: relative;
+    width: 100%;
+}
+
+.viz-panel.hidden { display: none; }
+
+/* --- 워드클라우드 --- */
+.cloud-word {
+    position: absolute;
+    font-weight: 700;
+    line-height: 1.18;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: opacity 0.12s ease, transform 0.12s ease;
+}
+
+.cloud-word:hover {
+    opacity: 0.75;
+    transform: scale(1.04);
+}
+
+/* --- 막대 --- */
+.bar-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.bar-row {
+    display: grid;
+    grid-template-columns: 110px 1fr 54px 92px;
+    align-items: center;
+    gap: 10px;
+}
+
+.bar-label {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bar-track {
+    position: relative;
+    height: 12px;
+    background: var(--viz-grid);
+    border-radius: 2px;
+}
+
+/* 데이터 끝만 4px 라운드, 기준선에 붙인다 */
+.bar-fill {
+    display: block;
+    height: 100%;
+    background: var(--kw-4);
+    border-radius: 2px 4px 4px 2px;
+    min-width: 3px;
+}
+
+.bar-value {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.bar-meta {
+    font-size: 0.74rem;
+    color: #64748b;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* --- 표 --- */
+.table-scroll {
+    max-height: 420px;
+    overflow: auto;
+}
+
+.viz-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}
+
+.viz-table thead th {
+    position: sticky;
+    top: 0;
+    background: rgba(15, 23, 42, 0.96);
+    color: #94a3b8;
+    font-weight: 600;
+    text-align: left;
+    padding: 9px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    white-space: nowrap;
+}
+
+.viz-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: #cbd5e1;
+}
+
+.viz-table td.kw { font-weight: 700; color: #f1f5f9; }
+.viz-table th.num, .viz-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.viz-table td.dist { color: #64748b; font-size: 0.76rem; }
+.viz-table tbody tr:hover td { background: rgba(56, 189, 248, 0.06); }
+
+.viz-footnote {
+    margin-top: 12px;
+    font-size: 0.72rem;
+    line-height: 1.6;
+    color: #52607a;
+}
+
+@media (max-width: 720px) {
+    .bar-row { grid-template-columns: 84px 1fr 46px; }
+    .bar-meta { display: none; }
+    .viz-views { width: 100%; }
+    .viz-view-btn { flex: 1; }
+}

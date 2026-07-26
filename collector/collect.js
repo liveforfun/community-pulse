@@ -9,6 +9,7 @@ const http = require('./http');
 const { SOURCES } = require('./sources');
 const { clusterItems, SIMILARITY_THRESHOLD } = require('./cluster');
 const { scoreCluster } = require('./score');
+const keywords = require('./keywords');
 const snapshotStore = require('./snapshot');
 
 const TOP_N = 3;
@@ -142,7 +143,10 @@ async function main() {
         clusterCount,
         sources,
         top,
-        clusters
+        clusters,
+        // 7일 키워드 집계의 원재료. 스냅샷마다 상위 키워드를 미리 계산해 두면
+        // 집계 시 336개 원본을 전부 다시 토큰화하지 않아도 된다.
+        keywords: keywords.summarizeSnapshot(allItems)
     };
 
     const saved = snapshotStore.save(snapshot);
@@ -151,6 +155,8 @@ async function main() {
     console.log('슬롯      : ' + snapshot.slot);
     console.log('수집 건수 : ' + snapshot.itemCount + '건 → 클러스터 ' + clusterCount + '개');
     console.log('저장      : data/' + saved.relPath);
+    console.log('키워드    : ' + saved.keywordSummary.keywordCount + '개 (' +
+        saved.keywordSummary.daysUsed.length + '일 · 스냅샷 ' + saved.keywordSummary.snapshotCount + '건 집계)');
     if (saved.createdRollups.length > 0) {
         console.log('일별요약  : ' + saved.createdRollups.join(', ') + ' 생성 (영구 보존)');
     }

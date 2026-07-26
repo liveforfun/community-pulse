@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 const rollup = require('./rollup');
+const keywords = require('./keywords');
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const SNAPSHOT_DIR = path.join(DATA_DIR, 'snapshots');
@@ -123,12 +124,18 @@ function save(snapshot) {
         days: rollup.listDaily(DATA_DIR)
     });
 
+    // 키워드 집계. 창 크기는 keywords.WINDOW_DAYS 가 정한다(원본 보관 기간과 별개).
+    // 창이 보관 기간보다 길면 그 초과분은 일별 요약의 keywords 에서 읽힌다.
+    const keywordSummary = keywords.build(DATA_DIR, slot.day, keywords.WINDOW_DAYS);
+    writeJson(path.join(DATA_DIR, 'keywords.json'), keywordSummary);
+
     return {
         slot,
         relPath,
         removedDays,
         keptWithoutRollup: pruned.keptWithoutRollup,
-        createdRollups
+        createdRollups,
+        keywordSummary
     };
 }
 

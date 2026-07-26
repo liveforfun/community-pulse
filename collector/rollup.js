@@ -10,8 +10,10 @@ const fs = require('fs');
 const path = require('path');
 
 const { normalizeTitle } = require('./cluster');
+const keywords = require('./keywords');
 
 const DAILY_TOP_N = 3;
+const DAILY_KEYWORD_LIMIT = 200;
 
 function readJson(file, fallback) {
     try {
@@ -41,6 +43,7 @@ function buildDaily(dataDir, day) {
     const sourceAgg = {};
     // 같은 글이 여러 슬롯에 걸쳐 등장하므로 제목 기준으로 중복을 합치고 최고 점수를 남긴다
     const bestByTitle = new Map();
+    const keywordLists = [];
     let itemCountTotal = 0;
 
     files.forEach(file => {
@@ -48,6 +51,7 @@ function buildDaily(dataDir, day) {
         if (!snap) return;
 
         itemCountTotal += snap.itemCount || 0;
+        if (snap.keywords) keywordLists.push(snap.keywords);
 
         const okSources = (snap.sources || []).filter(s => s.status === 'ok').length;
         slots.push({
@@ -113,7 +117,13 @@ function buildDaily(dataDir, day) {
         itemCountTotal,
         top,
         slots,
-        sourceSummary: Object.values(sourceAgg)
+        sourceSummary: Object.values(sourceAgg),
+        // 원본이 삭제된 뒤에도 7일 키워드 집계에 참여할 수 있도록 하루치 합계를 보존한다.
+        // keywords.merge() 가 다시 먹을 수 있는 {w, n, c} 형태로 저장한다.
+        keywords: keywords
+            .merge(keywordLists)
+            .slice(0, DAILY_KEYWORD_LIMIT)
+            .map(k => ({ w: k.w, n: k.exposure, c: k.communities }))
     };
 }
 

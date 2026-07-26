@@ -112,6 +112,41 @@
                 <!-- Cards rendered dynamically by JS -->
             </div>
 
+            <!-- 7-day keyword cloud -->
+            <section class="viz-root keyword-section glass">
+                <div class="viz-head">
+                    <div class="viz-title-group">
+                        <h2>
+                            <span class="material-symbols-rounded">tag</span>
+                            7일간 키워드 노출량
+                        </h2>
+                        <p class="viz-subtitle" id="keywordSubtitle">-</p>
+                    </div>
+                    <div class="viz-views" role="tablist" aria-label="키워드 표시 방식">
+                        <button class="viz-view-btn active" data-view="cloud" role="tab" aria-selected="true">클라우드</button>
+                        <button class="viz-view-btn" data-view="bar" role="tab" aria-selected="false">막대</button>
+                        <button class="viz-view-btn" data-view="table" role="tab" aria-selected="false">표</button>
+                    </div>
+                </div>
+
+                <div class="viz-scale-legend">
+                    <span class="scale-label">노출량 적음</span>
+                    <span class="scale-swatch s5"></span>
+                    <span class="scale-swatch s4"></span>
+                    <span class="scale-swatch s3"></span>
+                    <span class="scale-swatch s2"></span>
+                    <span class="scale-swatch s1"></span>
+                    <span class="scale-label">많음</span>
+                    <span class="scale-note">글자 크기·색이 같은 값(노출량)을 나타냅니다</span>
+                </div>
+
+                <div class="viz-panel" id="keywordCloud" role="img" aria-label="7일간 키워드 노출량 워드클라우드"></div>
+                <div class="viz-panel hidden" id="keywordBar"></div>
+                <div class="viz-panel hidden" id="keywordTable"></div>
+
+                <p class="viz-footnote" id="keywordFootnote"></p>
+            </section>
+
             <!-- Accumulated timeline -->
             <section class="timeline-section glass">
                 <div class="timeline-head">

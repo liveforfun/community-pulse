@@ -28,12 +28,26 @@ const BASIS_NOTE = {
     partial: '일부 글의 지표가 미제공 — 합산값이 불완전'
 };
 
+// 워드클라우드 색 램프 — dataviz 검증기(ordinal, dark, surface #101622) 전 항목 PASS.
+// 단일 블루 hue 의 명도 단계이므로 색은 크기와 같은 값(노출량)을 중복 인코딩한다.
+// 커뮤니티를 색으로 구분하지 않는 이유: 흩뿌려진 마크(전 쌍 비교)에서 5색은
+// 색약 분리 기준을 통과하지 못한다. 커뮤니티는 툴팁과 표에서 텍스트로 제공한다.
+const KEYWORD_RAMP = ['#cde2fb', '#9ec5f4', '#6da7ec', '#3987e5', '#1c5cab'];
+const CLOUD_HEIGHT = 360;
+const CLOUD_MIN_FONT = 13;
+const CLOUD_MAX_FONT = 54;
+const CLOUD_SPIRAL_STEPS = 14000;
+const BAR_TOP_N = 20;
+
 const state = {
     index: null,
     snapshot: null,
+    keywords: null,
+    keywordView: 'cloud',
     community: 'all',
     query: '',
-    countdownTimer: null
+    countdownTimer: null,
+    cloudResizeTimer: null
 };
 
 // DOM
@@ -55,7 +69,12 @@ const el = {
     refreshIcon: document.getElementById('refreshIcon'),
     timelineList: document.getElementById('timelineList'),
     timelineSub: document.getElementById('timelineSub'),
-    toastContainer: document.getElementById('toastContainer')
+    toastContainer: document.getElementById('toastContainer'),
+    keywordSubtitle: document.getElementById('keywordSubtitle'),
+    keywordCloud: document.getElementById('keywordCloud'),
+    keywordBar: document.getElementById('keywordBar'),
+    keywordTable: document.getElementById('keywordTable'),
+    keywordFootnote: document.getElementById('keywordFootnote')
 };
 
 // ===== 유틸 =====
@@ -330,6 +349,238 @@ function renderTrendingKeywords() {
     });
 }
 
+// ===== 7일 키워드 시각화 =====
+
+function dominantCommunity(communities) {
+    const entries = Object.keys(communities || {}).map(id => [id, communities[id]]);
+    if (entries.length === 0) return null;
+    entries.sort((a, b) => b[1] - a[1]);
+    return { id: entries[0][0], count: entries[0][1], total: entries.length };
+}
+
+/** 노출량 → 램프 인덱스 (0 = 가장 큼) */
+function rampIndex(exposure, min, max) {
+    if (max === min) return 2;
+    const t = (exposure - min) / (max - min);
+    const idx = KEYWORD_RAMP.length - 1 - Math.round(t * (KEYWORD_RAMP.length - 1));
+    return Math.max(0, Math.min(KEYWORD_RAMP.length - 1, idx));
+}
+
+/** 글자 크기: 면적이 값에 비례하도록 제곱근 스케일 */
+function cloudFontSize(exposure, min, max) {
+    if (max === min) return (CLOUD_MIN_FONT + CLOUD_MAX_FONT) / 2;
+    const t = Math.sqrt((exposure - min) / (max - min));
+    return CLOUD_MIN_FONT + t * (CLOUD_MAX_FONT - CLOUD_MIN_FONT);
+}
+
+function keywordTooltipText(k) {
+    const dom = dominantCommunity(k.communities);
+    const parts = ['노출량 ' + k.exposure.toLocaleString(), '등장 슬롯 ' + k.slots.toLocaleString()];
+    if (dom) {
+        parts.push('주요 커뮤니티 ' + communityOf(dom.id).name + (dom.total > 1 ? ' 외 ' + (dom.total - 1) : ''));
+    }
+    return k.w + ' — ' + parts.join(' · ');
+}
+
+/**
+ * 아르키메데스 나선 배치 + AABB 충돌 검사로 워드클라우드를 배치한다.
+ * 외부 라이브러리를 쓰지 않으므로 텍스트 폭은 canvas measureText 로 실측한다.
+ * 배치 실패한 단어는 버리고 개수를 각주에 밝힌다(조용히 누락시키지 않는다).
+ */
+function renderKeywordCloud() {
+    if (!state.keywords) return;
+
+    const words = state.keywords.keywords;
+    const box = el.keywordCloud;
+    const width = box.clientWidth || 640;
+    const height = CLOUD_HEIGHT;
+
+    if (words.length === 0) {
+        box.innerHTML = '<div class="empty-state"><p>집계된 키워드가 없습니다.</p></div>';
+        return;
+    }
+
+    const max = words[0].exposure;
+    const min = words[words.length - 1].exposure;
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    const placed = [];
+    const rendered = [];
+    const cx = width / 2;
+    const cy = height / 2;
+    const PAD = 5;
+
+    words.forEach(k => {
+        const fontSize = cloudFontSize(k.exposure, min, max);
+        ctx.font = '700 ' + fontSize + 'px Pretendard, system-ui, sans-serif';
+        const textWidth = ctx.measureText(k.w).width;
+        const textHeight = fontSize * 1.18;
+
+        if (textWidth + PAD * 2 > width) return; // 컨테이너보다 넓은 단어는 배치 불가
+
+        let spot = null;
+        // 나선을 촘촘히 돌며 빈 자리를 찾는다. 타원 비율을 컨테이너 종횡비에 맞춰
+        // 가로로 퍼지게 한다. 파라미터는 실데이터 시뮬레이션으로 조정했다
+        // (폭 420~1280px 에서 120개 중 51~120개 배치, 렌더 약 56ms).
+        const yScale = height / width;
+        const maxRadius = Math.sqrt(width * width + height * height);
+
+        for (let t = 0; t < CLOUD_SPIRAL_STEPS; t++) {
+            const angle = t * 0.08;
+            const radius = 0.7 * angle;
+            if (radius > maxRadius) break; // 컨테이너를 벗어난 뒤로는 탐색 무의미
+
+            const x = cx + radius * Math.cos(angle) - textWidth / 2;
+            const y = cy + radius * yScale * Math.sin(angle) - textHeight / 2;
+
+            if (x < PAD || y < PAD || x + textWidth > width - PAD || y + textHeight > height - PAD) {
+                continue;
+            }
+
+            const hit = placed.some(
+                p =>
+                    x < p.x + p.w + PAD &&
+                    x + textWidth + PAD > p.x &&
+                    y < p.y + p.h + PAD &&
+                    y + textHeight + PAD > p.y
+            );
+
+            if (!hit) {
+                spot = { x, y, w: textWidth, h: textHeight };
+                break;
+            }
+        }
+
+        if (!spot) return;
+
+        placed.push(spot);
+        rendered.push({ k, spot, fontSize });
+    });
+
+    box.style.height = height + 'px';
+    box.innerHTML = rendered
+        .map(r => {
+            const color = KEYWORD_RAMP[rampIndex(r.k.exposure, min, max)];
+            return (
+                '<span class="cloud-word" style="left:' + r.spot.x.toFixed(1) + 'px;top:' + r.spot.y.toFixed(1) +
+                'px;font-size:' + r.fontSize.toFixed(1) + 'px;color:' + color + '"' +
+                ' title="' + escapeHtml(keywordTooltipText(r.k)) + '"' +
+                ' data-word="' + escapeHtml(r.k.w) + '">' +
+                escapeHtml(r.k.w) +
+                '</span>'
+            );
+        })
+        .join('');
+
+    Array.from(box.querySelectorAll('.cloud-word')).forEach(span => {
+        span.onclick = () => {
+            el.searchInput.value = span.dataset.word;
+            state.query = span.dataset.word;
+            el.clearSearchBtn.classList.remove('hidden');
+            renderFeed();
+            el.searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        };
+    });
+
+    const dropped = words.length - rendered.length;
+    el.keywordFootnote.textContent =
+        '노출량 = ' + state.keywords.exposureDefinition +
+        (dropped > 0 ? ' · 공간 부족으로 ' + dropped + '개 키워드는 표시되지 않았습니다(막대·표 보기에서 확인).' : '');
+}
+
+function renderKeywordBar() {
+    if (!state.keywords) return;
+
+    const words = state.keywords.keywords.slice(0, BAR_TOP_N);
+    if (words.length === 0) {
+        el.keywordBar.innerHTML = '<div class="empty-state"><p>집계된 키워드가 없습니다.</p></div>';
+        return;
+    }
+
+    const max = words[0].exposure;
+
+    el.keywordBar.style.height = 'auto';
+    el.keywordBar.innerHTML =
+        '<div class="bar-chart">' +
+        words
+            .map(k => {
+                const pct = max === 0 ? 0 : (k.exposure / max) * 100;
+                const dom = dominantCommunity(k.communities);
+                return (
+                    '<div class="bar-row" title="' + escapeHtml(keywordTooltipText(k)) + '">' +
+                    '<span class="bar-label">' + escapeHtml(k.w) + '</span>' +
+                    '<span class="bar-track">' +
+                    '<span class="bar-fill" style="width:' + pct.toFixed(1) + '%"></span>' +
+                    '</span>' +
+                    '<span class="bar-value">' + k.exposure.toLocaleString() + '</span>' +
+                    '<span class="bar-meta">' + escapeHtml(dom ? communityOf(dom.id).name : '-') + '</span>' +
+                    '</div>'
+                );
+            })
+            .join('') +
+        '</div>';
+
+    el.keywordFootnote.textContent =
+        '상위 ' + words.length + '개 · 노출량 = ' + state.keywords.exposureDefinition;
+}
+
+function renderKeywordTable() {
+    if (!state.keywords) return;
+
+    const words = state.keywords.keywords;
+    if (words.length === 0) {
+        el.keywordTable.innerHTML = '<div class="empty-state"><p>집계된 키워드가 없습니다.</p></div>';
+        return;
+    }
+
+    el.keywordTable.style.height = 'auto';
+    el.keywordTable.innerHTML =
+        '<div class="table-scroll"><table class="viz-table">' +
+        '<thead><tr><th>순위</th><th>키워드</th><th class="num">노출량</th><th class="num">등장 슬롯</th><th>커뮤니티 분포</th></tr></thead><tbody>' +
+        words
+            .map((k, i) => {
+                const dist = Object.keys(k.communities)
+                    .map(id => [id, k.communities[id]])
+                    .sort((a, b) => b[1] - a[1])
+                    .map(e => communityOf(e[0]).name + ' ' + e[1])
+                    .join(', ');
+                return (
+                    '<tr><td>' + (i + 1) + '</td>' +
+                    '<td class="kw">' + escapeHtml(k.w) + '</td>' +
+                    '<td class="num">' + k.exposure.toLocaleString() + '</td>' +
+                    '<td class="num">' + k.slots.toLocaleString() + '</td>' +
+                    '<td class="dist">' + escapeHtml(dist) + '</td></tr>'
+                );
+            })
+            .join('') +
+        '</tbody></table></div>';
+
+    el.keywordFootnote.textContent =
+        '전체 ' + words.length + '개 · 노출량 = ' + state.keywords.exposureDefinition;
+}
+
+function renderKeywordSection() {
+    if (!state.keywords) {
+        el.keywordSubtitle.textContent = '키워드 집계 데이터가 없습니다 (npm run collect 실행 필요)';
+        return;
+    }
+
+    const k = state.keywords;
+    el.keywordSubtitle.textContent =
+        (k.fromDay || '?') + ' ~ ' + (k.toDay || '?') +
+        ' · ' + k.daysUsed.length + '일 · 스냅샷 ' + k.snapshotCount.toLocaleString() + '건 집계 · 키워드 ' + k.keywordCount + '개';
+
+    el.keywordCloud.classList.toggle('hidden', state.keywordView !== 'cloud');
+    el.keywordBar.classList.toggle('hidden', state.keywordView !== 'bar');
+    el.keywordTable.classList.toggle('hidden', state.keywordView !== 'table');
+
+    if (state.keywordView === 'cloud') renderKeywordCloud();
+    else if (state.keywordView === 'bar') renderKeywordBar();
+    else renderKeywordTable();
+}
+
 function renderSnapshotSelect() {
     if (!state.index) return;
 
@@ -488,6 +739,7 @@ function renderAll() {
     renderTrendingKeywords();
     renderSnapshotSelect();
     renderTimeline();
+    renderKeywordSection();
     updateCountdown();
 }
 
@@ -500,6 +752,14 @@ async function loadAll() {
         ]);
         state.index = index;
         state.snapshot = latest;
+
+        // 키워드 집계는 없어도 나머지 화면이 동작해야 한다
+        try {
+            state.keywords = await fetchJson('data/keywords.json');
+        } catch (e) {
+            state.keywords = null;
+        }
+
         renderAll();
     } catch (err) {
         el.newsGrid.innerHTML =
@@ -542,6 +802,26 @@ function initApp() {
         el.clearSearchBtn.classList.add('hidden');
         renderFeed();
     };
+
+    Array.from(document.querySelectorAll('.viz-view-btn')).forEach(btn => {
+        btn.onclick = () => {
+            state.keywordView = btn.dataset.view;
+            Array.from(document.querySelectorAll('.viz-view-btn')).forEach(b => {
+                const active = b === btn;
+                b.classList.toggle('active', active);
+                b.setAttribute('aria-selected', active ? 'true' : 'false');
+            });
+            renderKeywordSection();
+        };
+    });
+
+    // 클라우드는 컨테이너 폭에 맞춰 배치하므로 리사이즈 시 다시 배치한다
+    window.addEventListener('resize', () => {
+        clearTimeout(state.cloudResizeTimer);
+        state.cloudResizeTimer = setTimeout(() => {
+            if (state.keywordView === 'cloud') renderKeywordCloud();
+        }, 200);
+    });
 
     loadAll();
     state.countdownTimer = setInterval(updateCountdown, 1000);
