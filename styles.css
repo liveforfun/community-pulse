@@ -1836,3 +1836,14 @@ body {
     margin-top: 26px;
     margin-bottom: 0;
 }
+
+/* 누적값은 증분보다 보조 정보이므로 톤을 낮춘다 */
+.card-metrics.cumulative {
+    margin-top: 8px;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.card-metrics.cumulative .metric-box strong {
+    font-size: 0.9rem;
+    color: #cbd5e1;
+}

@@ -5,7 +5,7 @@ const { text, toInt, all } = require('./html');
 // 루리웹 베스트. robots.txt 에 /best 관련 금지 없음.
 // 주의: 우측 사이드바 `ul.hit_list > li.right_best_list_item` 은 제목만 있고 지표가 없다.
 // 반드시 본문 표(tr.best_top_row)를 파싱해야 한다.
-// 목록에 조회수 컬럼이 없다 → views 는 항상 null.
+// 조회수(td.hit)·댓글수(span.num_reply)·작성시간(td.time) 모두 목록에서 제공한다.
 
 // 목록에는 두 종류의 행이 있다: 상단 베스트(best_top_row)와 본문 목록(mode_list).
 // 둘 다 수집해야 한다. 태그 내부 공백에 관대해야 한다.
@@ -42,15 +42,18 @@ function parse(html) {
         const replyM = subjectM[1].match(/<span\b[^>]*class="[^"]*num_reply[^"]*"[^>]*>\s*\(?(\d+)\)?\s*<\/span>/);
         const recM = row.match(/<td\b[^>]*class="[^"]*recomd[^"]*"[^>]*>([\s\S]*?)<\/td>/);
         const writerM = row.match(/<td\b[^>]*class="[^"]*writer[^"]*"[^>]*>([\s\S]*?)<\/td>/);
+        const hitM = row.match(/<td\b[^>]*class="[^"]*\bhit\b[^"]*"[^>]*>([\s\S]*?)<\/td>/);
+        // td.time 안에 hidden input 이 섞여 있다. 태그를 걷어낸 뒤 시각만 취한다.
+        const timeM = row.match(/<td\b[^>]*class="[^"]*\btime\b[^"]*"[^>]*>([\s\S]*?)<\/td>/);
 
         items.push({
             title,
             url,
             author: writerM ? text(writerM[1]) : null,
             comments: replyM ? parseInt(replyM[1], 10) : 0,
-            views: null, // 목록에서 제공하지 않음
+            views: hitM ? toInt(hitM[1]) : null,
             recommends: recM ? toInt(recM[1]) : null,
-            postedAt: null
+            postedAt: timeM ? text(timeM[1]) || null : null
         });
     }
 
@@ -61,6 +64,6 @@ module.exports = {
     id: 'ruliweb',
     name: '루리웹',
     url: 'https://bbs.ruliweb.com/best',
-    provides: { views: false, comments: true },
+    provides: { views: true, comments: true },
     parse
 };

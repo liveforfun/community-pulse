@@ -4,13 +4,10 @@
 // 조회수·댓글수를 제공하지 않는 소스가 있으므로(null), 그 사실을 화면에 반드시 표시한다.
 
 const COMMUNITY_CONFIG = {
-    fmkorea: { id: 'fmkorea', name: '에펨코리아', color: '#0055a6', bgColor: 'rgba(0,85,166,0.14)' },
     ruliweb: { id: 'ruliweb', name: '루리웹', color: '#4d8fd6', bgColor: 'rgba(77,143,214,0.14)' },
     instiz: { id: 'instiz', name: '인스티즈', color: '#2b963a', bgColor: 'rgba(43,150,58,0.14)' },
-    todayhumor: { id: 'todayhumor', name: '오늘의유머', color: '#e0824f', bgColor: 'rgba(224,130,79,0.14)' },
     theqoo: { id: 'theqoo', name: '더쿠', color: '#d9628f', bgColor: 'rgba(217,98,143,0.14)' },
     clien: { id: 'clien', name: '클리앙', color: '#17a2a2', bgColor: 'rgba(23,162,162,0.14)' },
-    arcalive: { id: 'arcalive', name: '아카라이브', color: '#7c5cff', bgColor: 'rgba(124,92,255,0.14)' },
     inven: { id: 'inven', name: '인벤 오픈이슈', color: '#c0563b', bgColor: 'rgba(192,86,59,0.14)' },
     ppomppu: { id: 'ppomppu', name: '뽐뿌', color: '#c99a1e', bgColor: 'rgba(201,154,30,0.14)' },
     humoruniv: { id: 'humoruniv', name: '웃긴대학', color: '#7cb342', bgColor: 'rgba(124,179,66,0.14)' },
@@ -27,6 +24,13 @@ const STATUS_LABEL = {
     empty: { text: '수집 0건', cls: 'warn' },
     blocked: { text: '차단됨', cls: 'blocked' },
     error: { text: '실패', cls: 'error' }
+};
+
+// 증분 근거
+const DELTA_NOTE = {
+    measured: null,
+    'new-in-window': '이 창에서 처음 관측 — 누적값 전부를 증가분으로 계산',
+    'first-seen': '이번에 처음 관측되어 증가분을 알 수 없음'
 };
 
 const BASIS_NOTE = {
@@ -103,6 +107,12 @@ function escapeHtml(s) {
 function metric(value) {
     if (value === null || value === undefined) return '미제공';
     return Number(value).toLocaleString();
+}
+
+/** 증가분 표기. null 은 "측정 불가" 다. */
+function delta(value) {
+    if (value === null || value === undefined) return '측정불가';
+    return '+' + Number(value).toLocaleString();
 }
 
 function communityOf(id) {
@@ -271,8 +281,11 @@ function renderFeed() {
         : state.snapshot && state.snapshot.isDaily
         ? '하루 종합'
         : '이번 수집';
+    const scoreLabel = state.snapshot && state.snapshot.scoreMode === 'cumulative-fallback'
+        ? '누적 조회수+댓글수 기준(비교 대상 없음)'
+        : '30분 증가분 기준';
     el.activeFilterName.textContent =
-        filterName + ' · ' + periodName + ' 조회수+댓글수 기준 TOP ' + topN;
+        filterName + ' · ' + periodName + ' ' + scoreLabel + ' TOP ' + topN;
 
     if (!state.snapshot) {
         el.newsTotalCount.textContent = '-';
@@ -304,6 +317,7 @@ function renderFeed() {
     el.newsGrid.innerHTML = clusters
         .map((cluster, idx) => {
             const note = BASIS_NOTE[cluster.scoreBasis];
+            const deltaNote = DELTA_NOTE[cluster.deltaBasis];
 
             // 커뮤니티 태그는 카드 상단에 이미 있으므로 여기서는 제목과 원문 링크만 둔다
             const sources = cluster.items
@@ -339,15 +353,23 @@ function renderFeed() {
                 '<summary>' +
                 '<span class="material-symbols-rounded chevron">expand_more</span>' +
                 '<span class="summary-text">지표 보기</span>' +
-                (note ? '<span class="summary-warn material-symbols-rounded" title="' + escapeHtml(note) + '">warning</span>' : '') +
-                '<span class="summary-score">점수 ' + cluster.score.toLocaleString() + '</span>' +
+                ((note || deltaNote) ? '<span class="summary-warn material-symbols-rounded" title="' + escapeHtml(note || deltaNote) + '">warning</span>' : '') +
+                '<span class="summary-score">증분 ' + cluster.score.toLocaleString() + '</span>' +
                 '</summary>' +
                 '<div class="metrics-body">' +
                 '<div class="card-metrics">' +
-                '<div class="metric-box"><span class="metric-label">총 조회수</span><strong>' + metric(cluster.totalViews) + '</strong></div>' +
-                '<div class="metric-box"><span class="metric-label">총 댓글수</span><strong>' + metric(cluster.totalComments) + '</strong></div>' +
-                '<div class="metric-box"><span class="metric-label">점수</span><strong>' + cluster.score.toLocaleString() + '</strong></div>' +
+                '<div class="metric-box"><span class="metric-label">30분 조회 증가</span><strong>' + delta(cluster.deltaViews) + '</strong></div>' +
+                '<div class="metric-box"><span class="metric-label">30분 댓글 증가</span><strong>' + delta(cluster.deltaComments) + '</strong></div>' +
+                '<div class="metric-box"><span class="metric-label">증분 점수</span><strong>' + cluster.score.toLocaleString() + '</strong></div>' +
                 '</div>' +
+                '<div class="card-metrics cumulative">' +
+                '<div class="metric-box"><span class="metric-label">누적 조회수</span><strong>' + metric(cluster.totalViews) + '</strong></div>' +
+                '<div class="metric-box"><span class="metric-label">누적 댓글수</span><strong>' + metric(cluster.totalComments) + '</strong></div>' +
+                '<div class="metric-box"><span class="metric-label">묶인 글</span><strong>' + cluster.memberCount + '건</strong></div>' +
+                '</div>' +
+                (deltaNote
+                    ? '<div class="basis-chip"><span class="material-symbols-rounded">schedule</span>' + escapeHtml(deltaNote) + '</div>'
+                    : '') +
                 (note
                     ? '<div class="basis-chip"><span class="material-symbols-rounded">warning</span>' + escapeHtml(note) + '</div>'
                     : '') +

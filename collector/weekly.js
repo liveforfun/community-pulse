@@ -32,6 +32,10 @@ function consider(bestByTitle, cluster, slotLabel) {
         score: cluster.score,
         totalViews: cluster.totalViews,
         totalComments: cluster.totalComments,
+        deltaViews: cluster.deltaViews,
+        deltaComments: cluster.deltaComments,
+        deltaBasis: cluster.deltaBasis,
+        cumulativeScore: cluster.cumulativeScore,
         viewsComplete: cluster.viewsComplete,
         commentsComplete: cluster.commentsComplete,
         scoreBasis: cluster.scoreBasis,
@@ -78,6 +82,9 @@ function build(dataDir, todayDay, windowDays) {
     const partialDays = [];
     let snapshotCount = 0;
     let itemCountTotal = 0;
+    // 점수 체계가 누적 → 증분으로 바뀌었다. 두 방식은 스케일이 완전히 달라서
+    // 같은 순위표에 놓으면 구버전 스냅샷이 이긴다. 증분 스냅샷만 후보로 삼는다.
+    let legacySnapshotCount = 0;
 
     function aggregateSources(sources) {
         (sources || []).forEach(s => {
@@ -112,6 +119,7 @@ function build(dataDir, todayDay, windowDays) {
                     snapshotCount++;
                     itemCountTotal += snap.itemCount || 0;
                     aggregateSources(snap.sources);
+                    if (snap.scoreMode !== 'delta') { legacySnapshotCount++; return; }
                     (snap.clusters || snap.top || []).forEach(c => consider(bestByTitle, c, snap.slot));
                 });
                 if (files.length > 0) daysUsed.push(day);
@@ -173,6 +181,8 @@ function build(dataDir, todayDay, windowDays) {
         // 원본이 삭제되어 후보가 TOP 3 로 제한된 날 — UI 가 이 사실을 밝힐 수 있게 한다
         partialDays,
         snapshotCount,
+        // 점수 체계 전환 이전(누적 점수) 스냅샷 수 — 순위 후보에서 제외했다
+        legacySnapshotCount,
         itemCountTotal,
         candidateCount: ranked.length,
         top: ranked.slice(0, TOP_N).map((c, i) => Object.assign({ rank: i + 1 }, c)),

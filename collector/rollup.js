@@ -81,6 +81,9 @@ function buildDaily(dataDir, day) {
             agg.itemCountTotal += s.itemCount || 0;
         });
 
+        // 점수 체계 전환 이전(누적 점수) 스냅샷은 스케일이 달라 후보에서 제외한다
+        if (snap.scoreMode !== 'delta') return;
+
         // 그날의 최고 화제글을 뽑는다. TOP 3 만 보는 게 아니라 전체 클러스터를 후보로 둔다.
         (snap.clusters || snap.top || []).forEach(cluster => {
             const key = normalizeTitle(cluster.title) || cluster.title;
@@ -91,6 +94,10 @@ function buildDaily(dataDir, day) {
                     score: cluster.score,
                     totalViews: cluster.totalViews,
                     totalComments: cluster.totalComments,
+                    deltaViews: cluster.deltaViews,
+                    deltaComments: cluster.deltaComments,
+                    deltaBasis: cluster.deltaBasis,
+                    cumulativeScore: cluster.cumulativeScore,
                     viewsComplete: cluster.viewsComplete,
                     commentsComplete: cluster.commentsComplete,
                     scoreBasis: cluster.scoreBasis,

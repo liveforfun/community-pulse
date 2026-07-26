@@ -31,6 +31,9 @@ function parse(html) {
         const viewM = row.match(/<td\s[^>]*class=['"][^'"]*baseList-views[^'"]*['"][^>]*>([\s\S]*?)<\/td>/);
         const recM = row.match(/<td\s[^>]*class=['"][^'"]*baseList-rec[^'"]*['"][^>]*>([\s\S]*?)<\/td>/);
         const nameM = row.match(/<span\s[^>]*class=['"]baseList-name['"][^>]*>([\s\S]*?)<\/span>/);
+        // <time> 태그는 오늘 글이면 시각, 지난 글이면 날짜만 보여준다.
+        // 부모 td 의 title 속성에 완전한 타임스탬프가 있으므로 그것을 우선한다.
+        const fullTimeM = row.match(/title=['"](\d{2}[.\/-]\d{2}[.\/-]\d{2}\s+\d{2}:\d{2}:\d{2})['"]/);
         const timeM = row.match(/<time\s[^>]*class=['"]baseList-time['"][^>]*>([\s\S]*?)<\/time>/);
 
         const views = viewM ? toInt(viewM[1]) : null;
@@ -46,7 +49,7 @@ function parse(html) {
             // 추천 칸은 값이 없을 때 빈 셀로 온다 → null (미제공이 아니라 값 없음이지만
             // 점수에 쓰지 않는 지표이므로 null 로 둔다)
             recommends: recM ? toInt(recM[1]) : null,
-            postedAt: timeM ? text(timeM[1]) : null
+            postedAt: fullTimeM ? fullTimeM[1] : timeM ? text(timeM[1]) : null
         });
     }
 

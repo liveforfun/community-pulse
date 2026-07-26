@@ -11,6 +11,8 @@ const { clusterItems, SIMILARITY_THRESHOLD } = require('./cluster');
 const { scoreCluster } = require('./score');
 const keywords = require('./keywords');
 const snapshotStore = require('./snapshot');
+const delta = require('./delta');
+const { normalizePostedAt } = require('./time');
 
 const TOP_N = 3;
 const COLLECTOR_VERSION = 1;
@@ -70,11 +72,12 @@ function buildTop(items) {
 
     const scored = clusters.map(c => {
         const metrics = scoreCluster(c.members);
-        // 대표 제목은 그룹 내 최고 점수 글의 원제목. 순위 문자열을 제목에 넣지 않는다.
+        // 대표 제목은 그룹 내 증분이 가장 큰 글의 원제목
         const sortedMembers = c.members.slice().sort((a, b) => {
-            const av = (a.views || 0) + (a.comments || 0) * 100;
-            const bv = (b.views || 0) + (b.comments || 0) * 100;
-            return bv - av;
+            const av = (a.deltaViews || 0) + (a.deltaComments || 0) * 100;
+            const bv = (b.deltaViews || 0) + (b.deltaComments || 0) * 100;
+            if (bv !== av) return bv - av;
+            return (b.views || 0) - (a.views || 0);
         });
 
         return {
@@ -88,6 +91,11 @@ function buildTop(items) {
             commentsComplete: metrics.commentsComplete,
             scoreBasis: metrics.scoreBasis,
             score: metrics.score,
+            deltaViews: metrics.deltaViews,
+            deltaComments: metrics.deltaComments,
+            deltaBasis: metrics.deltaBasis,
+            measurable: metrics.measurable,
+            cumulativeScore: metrics.cumulativeScore,
             items: sortedMembers.map(m => ({
                 community: m.community,
                 communityName: m.communityName,
@@ -96,8 +104,13 @@ function buildTop(items) {
                 author: m.author,
                 views: m.views,
                 comments: m.comments,
+                deltaViews: m.deltaViews,
+                deltaComments: m.deltaComments,
+                deltaBasis: m.deltaBasis,
                 recommends: m.recommends,
-                postedAt: m.postedAt
+                postedAt: m.postedAt,
+                postedAtISO: m.postedAtISO,
+                postedAtPrecision: m.postedAtPrecision
             }))
         };
     });
@@ -132,7 +145,31 @@ async function main() {
         if (i < SOURCES.length - 1) await http.sleep(http.REQUEST_DELAY_MS);
     }
 
-    const { top, clusters, clusterCount } = buildTop(allItems);
+    // 1) 작성시간을 절대 시각으로 정규화한다 (사이트마다 표기가 제각각이다)
+    allItems = allItems.map(item => {
+        const norm = normalizePostedAt(item.postedAt, capturedAt);
+        return Object.assign({}, item, {
+            postedAtISO: norm ? norm.iso : null,
+            postedAtPrecision: norm ? norm.precision : null
+        });
+    });
+
+    // 2) 직전 스냅샷과 비교해 증분을 붙인다
+    const slot = snapshotStore.slotOf(capturedAt);
+    const slotStart = new Date(Date.parse(slot.label) - delta.SLOT_MINUTES * 60000);
+    const previous = delta.loadPrevious(snapshotStore.DATA_DIR, slot.label);
+    allItems = delta.attachDeltas(allItems, previous, slotStart);
+
+    let { top, clusters, clusterCount } = buildTop(allItems);
+
+    // 3) 증분을 하나도 잴 수 없으면(첫 실행 등) 누적값으로 대체하고 그 사실을 기록한다
+    let scoreMode = 'delta';
+    if (!clusters.some(c => c.measurable)) {
+        scoreMode = 'cumulative-fallback';
+        clusters.forEach(c => { c.score = c.cumulativeScore; });
+        clusters.sort((a, b) => b.score - a.score);
+        top = clusters.slice(0, TOP_N).map((c, i) => Object.assign({}, c, { rank: i + 1 }));
+    }
 
     const snapshot = {
         slot: snapshotStore.slotOf(capturedAt).label,
@@ -141,6 +178,9 @@ async function main() {
         similarityThreshold: SIMILARITY_THRESHOLD,
         itemCount: allItems.length,
         clusterCount,
+        // 순위 산정 방식. 'delta' = 직전 스냅샷 대비 증가분, 'cumulative-fallback' = 비교 대상 없음
+        scoreMode,
+        previousSlot: previous ? previous.slot : null,
         sources,
         top,
         clusters,
@@ -155,6 +195,12 @@ async function main() {
     console.log('슬롯      : ' + snapshot.slot);
     console.log('수집 건수 : ' + snapshot.itemCount + '건 → 클러스터 ' + clusterCount + '개');
     console.log('저장      : data/' + saved.relPath);
+    const basisCount = allItems.reduce((a, i) => { a[i.deltaBasis] = (a[i.deltaBasis] || 0) + 1; return a; }, {});
+    console.log('점수기준  : ' + scoreMode + (previous ? ' (직전 ' + previous.slot + ' 대비)' : ' (비교 대상 없음)') +
+        ' | 실측 ' + (basisCount.measured || 0) + ' · 창내신규 ' + (basisCount['new-in-window'] || 0) +
+        ' · 최초관측 ' + (basisCount['first-seen'] || 0));
+    const normalized = allItems.filter(i => i.postedAtPrecision === 'minute').length;
+    console.log('작성시간  : 분단위 확정 ' + normalized + '/' + allItems.length + '건');
     console.log('키워드    : ' + saved.keywordSummary.keywordCount + '개 (' +
         saved.keywordSummary.daysUsed.length + '일 · 스냅샷 ' + saved.keywordSummary.snapshotCount + '건 집계)');
     console.log('7일 종합  : 후보 ' + saved.weeklySummary.candidateCount + '개 → TOP ' +
@@ -176,11 +222,11 @@ async function main() {
     console.log('TOP ' + TOP_N + ':');
     top.forEach(c => {
         console.log('  ' + c.rank + '. ' + c.title);
-        console.log('     점수 ' + c.score.toLocaleString() +
-            ' | 조회 ' + (c.totalViews === null ? '미제공' : c.totalViews.toLocaleString()) +
-            ' | 댓글 ' + (c.totalComments === null ? '미제공' : c.totalComments.toLocaleString()) +
-            ' | 근거 ' + c.scoreBasis +
-            ' | 묶인 글 ' + c.memberCount + '건 (' + c.communities.join(', ') + ')');
+        console.log('     증분점수 ' + c.score.toLocaleString() +
+            ' (조회 +' + (c.deltaViews === null ? '?' : c.deltaViews.toLocaleString()) +
+            ', 댓글 +' + (c.deltaComments === null ? '?' : c.deltaComments.toLocaleString()) + ')' +
+            ' | 누적조회 ' + (c.totalViews === null ? '미제공' : c.totalViews.toLocaleString()) +
+            ' | ' + c.deltaBasis + ' | ' + c.communities.join(', '));
     });
 
     const failed = sources.filter(s => s.status !== 'ok');
