@@ -323,12 +323,25 @@ function renderFeed() {
                 '</div>' +
                 '<h3 class="card-title">' + escapeHtml(cluster.title) + '</h3>' +
                 '<div class="card-communities">' + communityBadges + '</div>' +
+                // 지표는 접어서 공간을 확보한다. 다만 지표 결손 경고는 순위 해석에 필수이므로
+                // 접히지 않는 자리에 압축 형태로 항상 노출한다.
+                (note
+                    ? '<div class="basis-chip" title="' + escapeHtml(note) + '">' +
+                      '<span class="material-symbols-rounded">warning</span>' + escapeHtml(note) +
+                      '</div>'
+                    : '') +
+                '<details class="metrics-toggle">' +
+                '<summary>' +
+                '<span class="material-symbols-rounded chevron">expand_more</span>' +
+                '<span class="summary-text">지표 보기</span>' +
+                '<span class="summary-score">점수 ' + cluster.score.toLocaleString() + '</span>' +
+                '</summary>' +
                 '<div class="card-metrics">' +
                 '<div class="metric-box"><span class="metric-label">총 조회수</span><strong>' + metric(cluster.totalViews) + '</strong></div>' +
                 '<div class="metric-box"><span class="metric-label">총 댓글수</span><strong>' + metric(cluster.totalComments) + '</strong></div>' +
                 '<div class="metric-box"><span class="metric-label">점수</span><strong>' + cluster.score.toLocaleString() + '</strong></div>' +
                 '</div>' +
-                (note ? '<div class="basis-warning"><span class="material-symbols-rounded">warning</span>' + escapeHtml(note) + '</div>' : '') +
+                '</details>' +
                 '<div class="cluster-sources">' +
                 '<div class="cluster-sources-label">묶인 글 ' + cluster.items.length + '건</div>' +
                 sources +

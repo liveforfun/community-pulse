@@ -1757,3 +1757,90 @@ body {
     background: rgba(148, 163, 184, 0.16);
     color: #cbd5e1;
 }
+
+/* ===== 카드 지표 접기 =====
+   순위 카드 공간을 아끼려 총조회수·총댓글수·점수를 접는다.
+   <details> 를 쓰므로 JS 없이 동작하고 키보드·스크린리더에서도 열린다. */
+.metrics-toggle {
+    margin-bottom: 12px;
+}
+
+.metrics-toggle > summary {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 11px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 9px;
+    cursor: pointer;
+    font-size: 0.78rem;
+    color: #94a3b8;
+    list-style: none;
+    user-select: none;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+/* 기본 삼각형 마커 제거 (WebKit / 표준) */
+.metrics-toggle > summary::-webkit-details-marker { display: none; }
+.metrics-toggle > summary::marker { content: ""; }
+
+.metrics-toggle > summary:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(56, 189, 248, 0.3);
+}
+
+.metrics-toggle > summary .chevron {
+    font-size: 1.1rem;
+    transition: transform 0.18s ease;
+}
+
+.metrics-toggle[open] > summary .chevron {
+    transform: rotate(180deg);
+}
+
+.metrics-toggle[open] > summary {
+    border-radius: 9px 9px 0 0;
+    border-bottom-color: transparent;
+}
+
+.summary-score {
+    margin-left: auto;
+    font-weight: 700;
+    color: #e2e8f0;
+    font-variant-numeric: tabular-nums;
+}
+
+.metrics-toggle .card-metrics {
+    margin-bottom: 0;
+    border-radius: 0 0 9px 9px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-top: none;
+}
+
+/* 지표 결손 경고 — 접히지 않는 압축 칩 형태 (순위 오해 방지용이라 항상 보인다) */
+.basis-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 10px;
+    padding: 5px 9px;
+    border-radius: 7px;
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.26);
+    color: #fbbf24;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.basis-chip .material-symbols-rounded {
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+/* 최하단으로 옮긴 수집 현황판 */
+.source-status {
+    margin-top: 26px;
+    margin-bottom: 0;
+}
