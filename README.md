@@ -17,8 +17,15 @@
 | 인스티즈 | `instiz` | ✅ | ✅ |
 | 오늘의유머 베오베 | `todayhumor` | ✅ | ✅ |
 | 더쿠 핫게 | `theqoo` | ✅ | ✅ |
+| 클리앙 모두의공원 | `clien` | ✅ | ✅ |
+| 아카라이브 라이브 | `arcalive` | ✅ | ✅ |
+| 인벤 오픈이슈갤 | `inven` | ✅ | ✅ |
+| 뽐뿌 자유게시판 | `ppomppu` | ✅ | ✅ | *(euc-kr)* |
+| 웃긴대학 베스트 | `humoruniv` | ✅ | ✅ | *(euc-kr)* |
 | 디시 주식갤 | `dc_stock` | ✅ | ✅ |
 | 디시 부동산갤 | `dc_realestate` | ✅ | ✅ |
+
+총 12곳. **조회수를 제공하지 않는 곳은 에펨코리아·루리웹 두 곳뿐**이다(초기에는 5곳 중 2곳이었다).
 
 - **없는 값은 만들어내지 않는다.** 목록에서 얻을 수 없는 지표는 `null` 로 저장하고, UI 카드에 "조회수 미제공" 경고를 표시한다.
 - 따라서 **조회수를 제공하는 소스와 그렇지 않은 소스가 같은 순위표에서 경쟁하면 순위가 왜곡된다.** 각 카드의 `scoreBasis` 배지를 보고 해석해야 한다.
@@ -27,6 +34,7 @@
 - 로그인이나 JS 렌더가 필요: 네이버카페(부동산스터디·월부), 블라인드, 토스증권, 호갱노노
 - **robots.txt 가 목록 경로를 `Disallow`**: SLR클럽 자유게시판, MLBPARK, 네이트판 — 응답은 200 이지만 규칙을 지켜 넣지 않는다
 - **봇 UA 에 406 응답**(UA 게이팅): 보배드림
+- **서버 렌더 목록에 조회수·댓글수가 없음**: 개드립 — `data-document-srl` 은 있지만 제목만 있는 위젯형 목록이라 지표를 얻을 수 없다. 지표 없이 넣으면 점수 0 이 되어 순위에 의미가 없으므로 제외했다
 - **네이버 종토방**: robots.txt 는 `Allow: /item/board.naver?code=*` 로 허용하지만, 서버가 브라우저 아닌 User-Agent 에 200 응답으로 오류 페이지(약 2.7KB)를 돌려주며 게이팅한다. 브라우저를 위장하지 않기로 했으므로 수집 대상에서 제외했다. (`collector/sources/naverStock.js` 및 `isBlocked` 훅 제거)
 
 ## 수집 매너
@@ -36,6 +44,8 @@
   - 디시: 차단 갤러리 목록에 `neostock`·`immovables` 없음
   - 오늘의유머: `User-agent: * → Allow: /`. 단 **Content-Signal: `search=yes, ai-train=no, use=reference`** 를 선언한다 — 제목을 인용하고 원문으로 링크하는 이 용도는 `use=reference` 에 해당하며, 학습 데이터로 쓰지 않는다
   - 더쿠: robots.txt 가 404(규칙 없음)
+  - 클리앙·아카라이브·뽐뿌: `User-agent: *` 가 해당 목록 경로를 Allow
+  - 인벤·웃긴대학: 해당 경로에 금지 규칙 없음
 - **목록 페이지만 요청한다.** 개별 글은 요청하지 않고 링크로만 노출한다.
 - 정직한 User-Agent 를 쓴다: `community-pulse-bot/1.0 (+https://github.com/liveforfun/community-pulse)`
 - 소스를 **순차 처리**하고 요청 사이 **1.5초** 지연을 둔다. 동시 요청하지 않는다.
@@ -72,7 +82,7 @@ export PATH="$HOME/.nvm/versions/node/v16.20.2/bin:$PATH"
 ```
 collector/
   collect.js        수집 엔트리 — 순차 수집 → 클러스터링 → 점수 → 스냅샷 저장
-  http.js           https GET (UA·타임아웃·재시도·리다이렉트·요청 간 지연)
+  http.js           https GET (UA·타임아웃·재시도·리다이렉트·요청 간 지연·소스별 인코딩)
   cluster.js        제목 정규화 + bigram 자카드 유사도 클러스터링
   score.js          점수 계산 및 scoreBasis 판정
   snapshot.js       스냅샷 기록 · 인덱스 갱신 · 보관 기간 프루닝(롤업 존재 시에만 삭제)
@@ -83,6 +93,7 @@ collector/
     html.js         정규식 HTML 유틸 (태그 제거·엔티티 해제·숫자 추출)
     dcinside.js     주식갤·부동산갤 공용 파서
     fmkorea.js  ruliweb.js  instiz.js  todayhumor.js  theqoo.js
+    clien.js  arcalive.js  inven.js  ppomppu.js(euc-kr)  humoruniv.js(euc-kr)
 data/
   latest.json               최신 스냅샷 전문
   index.json                슬롯 목록 + 일별 요약 목록 (타임라인 UI 용)
@@ -314,6 +325,12 @@ UI 의 "누적 수집 이력" 섹션은 30분 단위 원본과 일별 요약을 
 파서 수정 시 주의: **태그 내부에 탭·줄바꿈이 섞인다.** `<li class="…">` 처럼 공백을 고정한 정규식은 조용히 0건을 반환한다. `<li\b[^>]*class="[^"]*…"` 형태로 공백에 관대하게 쓴다. (실제로 이 함정 때문에 초기 구현에서 에펨·루리웹·인스티즈가 부분 실패했다.)
 
 또한 **에펨코리아는 User-Agent 에 따라 두 가지 템플릿을 내려준다** — 제목 링크가 `/best/{id}` 인 형태와 `/index.php?…&document_srl={id}` 인 형태. 파서는 양쪽을 모두 처리한다.
+
+**인코딩**: 소스 모듈에 `encoding: 'euc-kr'` 을 선언하면 `http.js` 가 `TextDecoder` 로 디코딩한다(Node 16 은 full-icu 포함). 선언하지 않으면 UTF-8.
+
+**중첩 컨테이너·클래스 접두사 함정.** 아카라이브는 행이 `<div class="vrow hybrid">` 인데 내부에 `vrow-inner`·`vrow-top`·`vrow-bottom`·`vrow-preview` 가 있다. `class="vrow[^"]*"` 로 매칭하면 내부 div 까지 잡혀 행 슬라이스가 65자로 잘리고 **조회수가 전부 null 이 된다.** `class="vrow(?:\s[^"]*)?"` 처럼 단어 단위로 매칭해야 한다. 클리앙·웃긴대학도 중첩 태그 때문에 닫는 태그를 맞출 수 없어 **시작 마커로 경계를 자르는 방식**을 쓴다.
+
+**공지 행은 반드시 걸러야 한다.** 인벤 공지는 조회수가 수년간 누적되어 180만이라, 걸러내지 않으면 공지 3건이 TOP 3 를 영구히 점령한다(실제로 그렇게 됐다). 사이트별 공지 표식: 인벤 `tr.notice`·`span.notice-icon`, 더쿠 `tr.notice`/`td.no` 가 숫자 아님, 디시 `data-type="icon_notice"`, 나머지는 조회수 칸이 비어 있는 것으로 판별한다.
 
 **속성값 따옴표도 사이트마다 다르다.** 오늘의유머는 `class='list_memo_count_span'` 처럼 작은따옴표를 쓴다. 큰따옴표만 보는 정규식은 오류 없이 조용히 0 을 반환하므로(실제로 댓글수가 전부 0 으로 수집되는 버그가 났다), `class=['\"]…['\"]` 형태로 양쪽을 허용해야 한다. 새 파서를 붙인 뒤에는 **특정 지표가 전부 0/ null 로만 나오는지 반드시 확인할 것.**
 

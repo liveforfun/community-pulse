@@ -29,7 +29,7 @@ async function collectSource(source) {
     };
 
     try {
-        const res = await http.get(source.url);
+        const res = await http.get(source.url, { encoding: source.encoding });
 
         if (!res.ok) {
             // 403/429 는 차단으로 구분해서 기록한다. 우회를 시도하지 않는다.

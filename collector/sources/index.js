@@ -11,12 +11,19 @@ const dcinside = require('./dcinside');
 // 검토했으나 제외한 곳:
 //  - robots.txt 가 목록 경로를 Disallow: SLR클럽, MLBPARK, 네이트판
 //  - 봇 UA 에 406 응답(UA 게이팅): 보배드림
+//  - 서버 렌더 목록에 조회수·댓글수가 아예 없음(제목만): 개드립
+//    → 지표 없이 넣으면 점수 0 으로 순위에 의미가 없어 제외했다
 const SOURCES = [
     require('./fmkorea'),
     require('./ruliweb'),
     require('./instiz'),
     require('./todayhumor'),
     require('./theqoo'),
+    require('./clien'),
+    require('./arcalive'),
+    require('./inven'),
+    require('./ppomppu'), // euc-kr
+    require('./humoruniv'), // euc-kr
     dcinside.make('dc_stock', '디시 주식갤', 'neostock'),
     dcinside.make('dc_realestate', '디시 부동산갤', 'immovables')
 ];

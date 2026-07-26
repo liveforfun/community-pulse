@@ -9,6 +9,11 @@ const COMMUNITY_CONFIG = {
     instiz: { id: 'instiz', name: '인스티즈', color: '#2b963a', bgColor: 'rgba(43,150,58,0.14)' },
     todayhumor: { id: 'todayhumor', name: '오늘의유머', color: '#e0824f', bgColor: 'rgba(224,130,79,0.14)' },
     theqoo: { id: 'theqoo', name: '더쿠', color: '#d9628f', bgColor: 'rgba(217,98,143,0.14)' },
+    clien: { id: 'clien', name: '클리앙', color: '#17a2a2', bgColor: 'rgba(23,162,162,0.14)' },
+    arcalive: { id: 'arcalive', name: '아카라이브', color: '#7c5cff', bgColor: 'rgba(124,92,255,0.14)' },
+    inven: { id: 'inven', name: '인벤 오픈이슈', color: '#c0563b', bgColor: 'rgba(192,86,59,0.14)' },
+    ppomppu: { id: 'ppomppu', name: '뽐뿌', color: '#c99a1e', bgColor: 'rgba(201,154,30,0.14)' },
+    humoruniv: { id: 'humoruniv', name: '웃긴대학', color: '#7cb342', bgColor: 'rgba(124,179,66,0.14)' },
     dc_stock: { id: 'dc_stock', name: '디시 주식갤', color: '#6b7ce0', bgColor: 'rgba(107,124,224,0.14)' },
     dc_realestate: { id: 'dc_realestate', name: '디시 부동산갤', color: '#b07ce0', bgColor: 'rgba(176,124,224,0.14)' }
 };

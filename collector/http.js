@@ -17,7 +17,18 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function once(url, timeoutMs, redirectsLeft) {
+// 사이트마다 인코딩이 다르다. Node 16 은 full-icu 를 포함하므로 TextDecoder 로 euc-kr 을 읽는다.
+function decodeBody(buf, encoding) {
+    if (!encoding || encoding === 'utf-8' || encoding === 'utf8') return buf.toString('utf8');
+    try {
+        return new TextDecoder(encoding).decode(buf);
+    } catch (e) {
+        // 디코더가 없으면 utf8 로 떨어뜨린다(깨진 텍스트가 파서 0건으로 드러난다)
+        return buf.toString('utf8');
+    }
+}
+
+function once(url, timeoutMs, redirectsLeft, encoding) {
     return new Promise(resolve => {
         let target;
         try {
@@ -47,15 +58,14 @@ function once(url, timeoutMs, redirectsLeft) {
                         return;
                     }
                     const next = new URL(location, target).toString();
-                    once(next, timeoutMs, redirectsLeft - 1).then(resolve);
+                    once(next, timeoutMs, redirectsLeft - 1, encoding).then(resolve);
                     return;
                 }
 
                 const chunks = [];
                 res.on('data', chunk => chunks.push(chunk));
                 res.on('end', () => {
-                    // 현재 5개 소스는 전부 UTF-8 이다. euc-kr 소스가 추가되면 여기서 분기한다.
-                    const body = Buffer.concat(chunks).toString('utf8');
+                    const body = decodeBody(Buffer.concat(chunks), encoding);
                     resolve({
                         ok: status >= 200 && status < 300,
                         status,
@@ -81,11 +91,12 @@ async function get(url, options) {
     const opts = options || {};
     const timeoutMs = opts.timeoutMs || 15000;
     const retries = opts.retries === undefined ? 2 : opts.retries;
+    const encoding = opts.encoding || 'utf-8';
 
     let last = null;
     for (let attempt = 0; attempt <= retries; attempt++) {
         if (attempt > 0) await sleep(1000 * attempt);
-        last = await once(url, timeoutMs, MAX_REDIRECTS);
+        last = await once(url, timeoutMs, MAX_REDIRECTS, encoding);
         if (last.ok) return last;
         // 4xx 는 재시도해도 같은 결과다. 차단·삭제된 경로를 반복 요청하지 않는다.
         if (last.status >= 400 && last.status < 500) return last;
