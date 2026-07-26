@@ -170,7 +170,7 @@ let rawArticlesDatabase = [
         views: 7364,
         upvotes: 890,
         comments: 46,
-        url: 'https://bbs.ruliweb.com/best/board/300143/read/76083088' // REAL EXACT POST URL!
+        url: 'https://bbs.ruliweb.com/best/board/300143/read/76083088'
     },
     {
         id: 'ruli-real-2',
@@ -185,7 +185,7 @@ let rawArticlesDatabase = [
         views: 6932,
         upvotes: 810,
         comments: 21,
-        url: 'https://bbs.ruliweb.com/best/board/300143/read/76083062' // REAL EXACT POST URL!
+        url: 'https://bbs.ruliweb.com/best/board/300143/read/76083062'
     },
     {
         id: 'ruli-real-3',
@@ -200,7 +200,7 @@ let rawArticlesDatabase = [
         views: 6021,
         upvotes: 750,
         comments: 17,
-        url: 'https://bbs.ruliweb.com/best/board/300143/read/76083057' // REAL EXACT POST URL!
+        url: 'https://bbs.ruliweb.com/best/board/300143/read/76083057'
     },
     {
         id: 'ruli-real-4',
@@ -215,7 +215,7 @@ let rawArticlesDatabase = [
         views: 5625,
         upvotes: 680,
         comments: 12,
-        url: 'https://bbs.ruliweb.com/best/board/300143/read/76083121' // REAL EXACT POST URL!
+        url: 'https://bbs.ruliweb.com/best/board/300143/read/76083121'
     },
     {
         id: 'ruli-real-5',
@@ -230,7 +230,7 @@ let rawArticlesDatabase = [
         views: 1884,
         upvotes: 320,
         comments: 11,
-        url: 'https://bbs.ruliweb.com/best/board/300143/read/76083125' // REAL EXACT POST URL!
+        url: 'https://bbs.ruliweb.com/best/board/300143/read/76083125'
     },
     {
         id: 'ruli-real-6',
@@ -245,7 +245,7 @@ let rawArticlesDatabase = [
         views: 1143,
         upvotes: 210,
         comments: 7,
-        url: 'https://bbs.ruliweb.com/best/board/300143/read/76083127' // REAL EXACT POST URL!
+        url: 'https://bbs.ruliweb.com/best/board/300143/read/76083127'
     },
     {
         id: 'ruli-real-7',
@@ -260,7 +260,7 @@ let rawArticlesDatabase = [
         views: 975,
         upvotes: 180,
         comments: 6,
-        url: 'https://bbs.ruliweb.com/best/board/300143/read/76083050' // REAL EXACT POST URL!
+        url: 'https://bbs.ruliweb.com/best/board/300143/read/76083050'
     },
 
     // 💬 인스티즈 실제 30분 최신글
@@ -510,7 +510,7 @@ function triggerCommunityCrawl(isAuto = false) {
     }, 800);
 }
 
-// ===== Render Feed: Universal 11-Community Clustering & GUARANTEED EXACTLY TOP 3 OUTPUT =====
+// ===== Render Feed: Clean Premium Card Layout =====
 function renderFeed() {
     let filtered = rawArticlesDatabase.filter(news => {
         const commConfig = COMMUNITY_CONFIG[news.community];
@@ -578,20 +578,22 @@ function renderFeed() {
         const isBookmarked = bookmarkedIds.includes(cluster.clusterId);
         const rankMedal = idx === 0 ? '🥇 1위' : (idx === 1 ? '🥈 2위' : '🥉 3위');
 
-        // Individual article source links inside cluster card with EXACT INDIVIDUAL POST URLS!
+        // Individual article source links inside cluster card with CLEAN SLEEK BUTTONS (NO RAW URL OVERFLOW)!
         const sourcesHtml = cluster.articles.map(art => {
             const comm = COMMUNITY_CONFIG[art.community];
             return `
-                <a href="${art.url}" target="_blank" rel="noopener noreferrer" class="source-item-link" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; margin-top: 6px; text-decoration: none; color: #fff; transition: all 0.2s ease;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span class="source-community-tag" style="background: ${comm.bgColor}; color: ${comm.color}; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 0.78rem;">
+                <a href="${art.url}" target="_blank" rel="noopener noreferrer" class="source-item-link" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 14px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; margin-top: 6px; text-decoration: none; color: #fff; transition: all 0.2s ease;">
+                    <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1;">
+                        <span class="source-community-tag" style="background: ${comm.bgColor}; color: ${comm.color}; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 0.78rem; flex-shrink: 0;">
                             ${comm.name}
                         </span>
-                        <span style="font-size: 0.9rem; font-weight: 600;">${escapeHtml(art.title)}</span>
+                        <span style="font-size: 0.88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #f1f5f9;">
+                            ${escapeHtml(art.title)}
+                        </span>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                        <span style="font-size: 0.75rem; color: #38bdf8; font-family: monospace;">${art.url}</span>
-                        <span class="material-symbols-rounded" style="font-size: 18px; color: #38bdf8">open_in_new</span>
+                    <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0; background: rgba(56, 189, 248, 0.12); color: #38bdf8; padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 700;">
+                        <span>원문보기</span>
+                        <span class="material-symbols-rounded" style="font-size: 16px;">open_in_new</span>
                     </div>
                 </a>
             `;
@@ -628,7 +630,7 @@ function renderFeed() {
                 <div class="cluster-sources-list" style="margin-top: 14px;">
                     <div style="font-size: 0.82rem; color: var(--text-muted); font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 4px;">
                         <span class="material-symbols-rounded" style="font-size: 16px; color: #f59e0b">link</span>
-                        <span>30분 내 해당 통합 이슈 개별 원문 바로가기 목록 (클릭시 해당 개별글 직행):</span>
+                        <span>30분 내 해당 통합 이슈 개별 원문 바로가기 목록 (클릭시 개별글 직행):</span>
                     </div>
                     ${sourcesHtml}
                 </div>
