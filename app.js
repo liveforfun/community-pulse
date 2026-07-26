@@ -1,4 +1,4 @@
-// ===== 30-Minute Real Community Feed & Article Specific Engine =====
+// ===== 30-Minute Real Community Clustering & TOP 3 Ranking Engine =====
 
 const COMMUNITY_CONFIG = {
     // Sector 1: 💬 종합/유머
@@ -109,11 +109,13 @@ const COMMUNITY_CONFIG = {
 
 // Real 30-minute articles currently live on communities right now
 let rawArticlesDatabase = [
-    // 1위 (최다 조회수 & 댓글수) - 에펨코리아 실제 개별 글
+    // [그룹 1] 부동산/임대주택 정책 이슈 그룹
     {
         id: 'fm-real-1',
         community: 'fmkorea',
-        title: '[포도 팩트체크] 전세가 사라지기 시작하자 외국계 기업의 임대주택 사업 진출 [댓글 165개]',
+        clusterKey: 'housing_policy',
+        clusterName: '🏢 부동산 & 임대주택 이슈',
+        title: '[포도 팩트체크] 전세가 사라지기 시작하자 외국계 기업의 임대주택 사업 진출',
         snippet: '최근 30분간 에펨코리아 포텐 최상단 최고 화제글. 전세 시장 변화와 외국계 기업의 임대주택 진출에 대한 유저들의 열띤 토론.',
         topic: 'issue',
         author: '돌아오다말다',
@@ -121,13 +123,31 @@ let rawArticlesDatabase = [
         views: 185000,
         upvotes: 2100,
         comments: 165,
-        url: 'https://www.fmkorea.com/best/10131913127' // REAL EXACT INDIVIDUAL POST URL!
+        url: 'https://www.fmkorea.com/best/10131913127'
     },
-    // 2위 - 에펨코리아 실제 개별 글
+    {
+        id: 're-real-1',
+        community: 'naver_boos',
+        clusterKey: 'housing_policy',
+        clusterName: '🏢 부동산 & 임대주택 이슈',
+        title: '[부동산 스터디] 강남/마용성 분양가 상한제 단지 청약 접수 결과 및 당첨 가점 예측',
+        snippet: '부동산 스터디 카페 30분 최고 화제글. 예상 당첨 가점 컷과 실거주 의무 정리 리포트.',
+        topic: 'realestate',
+        author: '부동산고수',
+        minutesAgo: 10,
+        views: 125000,
+        upvotes: 2100,
+        comments: 540,
+        url: 'https://cafe.naver.com/jaeup'
+    },
+
+    // [그룹 2] 여름 유머/이슈 유머 그룹
     {
         id: 'fm-real-2',
         community: 'fmkorea',
-        title: '지금 대한민국에서 가장 시원한곳은 " 코스트코 야채코너 " [댓글 165개]',
+        clusterKey: 'summer_humor',
+        clusterName: '🤣 여름 유머 & 세상 사는 이야기',
+        title: '지금 대한민국에서 가장 시원한곳은 " 코스트코 야채코너 "',
         snippet: '폭염 속 30분간 유머 카테고리 폭발적인 조회수 기록. 코스트코 야채코너의 극강 신선 냉기에 대한 신선한 유머글.',
         topic: 'humor',
         author: '토달지말어',
@@ -135,13 +155,14 @@ let rawArticlesDatabase = [
         views: 142000,
         upvotes: 1850,
         comments: 165,
-        url: 'https://www.fmkorea.com/best/10131889669' // REAL EXACT INDIVIDUAL POST URL!
+        url: 'https://www.fmkorea.com/best/10131889669'
     },
-    // 3위 - 에펨코리아 실제 개별 글
     {
         id: 'fm-real-3',
         community: 'fmkorea',
-        title: '사람의 진심은 표정에서 나온다.jpg [댓글 111개]',
+        clusterKey: 'summer_humor',
+        clusterName: '🤣 여름 유머 & 세상 사는 이야기',
+        title: '사람의 진심은 표정에서 나온다.jpg',
         snippet: '30분간 높은 추천수를 받은 포텐 짤방글. 사람의 솔직한 감정이 표정으로 노출되는 순간들 모음.',
         topic: 'humor',
         author: '자계',
@@ -149,27 +170,14 @@ let rawArticlesDatabase = [
         views: 98000,
         upvotes: 1200,
         comments: 111,
-        url: 'https://www.fmkorea.com/best/10131377208' // REAL EXACT INDIVIDUAL POST URL!
+        url: 'https://www.fmkorea.com/best/10131377208'
     },
-    // 4위 - 에펨코리아 실제 개별 글
-    {
-        id: 'fm-real-4',
-        community: 'fmkorea',
-        title: '[BBC] 에디 하우 : “기마랑이스와 긍정적인 대화를 나눴지만, 그의 미래는 확신할 수 없다.” [댓글 91개]',
-        snippet: '축구소식 카테고리 30분간 최고 댓글수 기록. 뉴캐슬 에디 하우 감독의 기마랑이스 이적설 관련 인터뷰 번역.',
-        topic: 'sports',
-        author: '석화',
-        minutesAgo: 29,
-        views: 89000,
-        upvotes: 950,
-        comments: 91,
-        url: 'https://www.fmkorea.com/best/10130882370' // REAL EXACT INDIVIDUAL POST URL!
-    },
-    // 5위 - 에펨코리아 실제 개별 글
     {
         id: 'fm-real-5',
         community: 'fmkorea',
-        title: '[약혐?) 얼마전 캐리비안베이 아이돌 공연 대참사 ㄷㄷㄷ [댓글 88개]',
+        clusterKey: 'summer_humor',
+        clusterName: '🤣 여름 유머 & 세상 사는 이야기',
+        title: '[약혐?) 얼마전 캐리비안베이 아이돌 공연 대참사 ㄷㄷㄷ',
         snippet: '최근 5분 전 포텐에 등록된 워터파크 아이돌 공연 현장 돌발 상황 짤방.',
         topic: 'humor',
         author: '카아리마나',
@@ -177,55 +185,15 @@ let rawArticlesDatabase = [
         views: 78000,
         upvotes: 820,
         comments: 88,
-        url: 'https://www.fmkorea.com/best/10131920945' // REAL EXACT INDIVIDUAL POST URL!
-    },
-    // 6위 - 에펨코리아 실제 개별 글
-    {
-        id: 'fm-real-6',
-        community: 'fmkorea',
-        title: '20대 미녀 레슬러가 5년째 남자친구가 없는 이유 [댓글 80개]',
-        snippet: '8분 전 등록된 레슬링 선수 인스타그램 및 미디어 인터뷰 비하인드 스토리.',
-        topic: 'humor',
-        author: 'Twixmini',
-        minutesAgo: 8,
-        views: 65000,
-        upvotes: 710,
-        comments: 80,
-        url: 'https://www.fmkorea.com/best/10131783708' // REAL EXACT INDIVIDUAL POST URL!
-    },
-    // 7위 - 에펨코리아 실제 개별 글
-    {
-        id: 'fm-real-7',
-        community: 'fmkorea',
-        title: '[리버풀 vs 선덜랜드] 선덜랜드 티무르 투티에로브 역전골 ㄷㄷㄷㄷㄷㄷㄷ.gif [댓글 22개]',
-        snippet: '13분 전 올라온 해외 축구 경기 역전골 하이라이트 움직이는 짤방.',
-        topic: 'sports',
-        author: '음교수',
-        minutesAgo: 13,
-        views: 42000,
-        upvotes: 490,
-        comments: 22,
-        url: 'https://www.fmkorea.com/best/10130909198' // REAL EXACT INDIVIDUAL POST URL!
-    },
-    // 8위 - 에펨코리아 실제 개별 글
-    {
-        id: 'fm-real-8',
-        community: 'fmkorea',
-        title: '고려는 사적제재를 허용한 적이 없다 - 복수법의 진실 [댓글 7개]',
-        snippet: '미스터리/역사 카테고리 5분 전 실시간 최신 역사 팩트체크 컬럼.',
-        topic: 'issue',
-        author: 'vidu',
-        minutesAgo: 5,
-        views: 31000,
-        upvotes: 340,
-        comments: 7,
-        url: 'https://www.fmkorea.com/best/10130339770' // REAL EXACT INDIVIDUAL POST URL!
+        url: 'https://www.fmkorea.com/best/10131920945'
     },
 
-    // 📈 주식/증시 실제 개별 글
+    // [그룹 3] 반도체/미국주식 증시 그룹
     {
         id: 'stock-real-1',
         community: 'naver_stock',
+        clusterKey: 'stock_trend',
+        clusterName: '📈 주식 & 증시 반도체 수급',
         title: '[삼성전자 종토방] 장중 외인 2,000억 기습 순매수 유입... 반도체 반등 신호탄',
         snippet: '네이버 증권 실시간 종토방 최다 조회글. 외인 수급 급증 및 반도체 업황 회복 기대감.',
         topic: 'stock',
@@ -239,6 +207,8 @@ let rawArticlesDatabase = [
     {
         id: 'stock-real-2',
         community: 'dc_stock',
+        clusterKey: 'stock_trend',
+        clusterName: '📈 주식 & 증시 반도체 수급',
         title: '[디시 미주갤] 엔비디아 실적 발표 앞두고 옵션 변동성 폭발... 서학개미 매수 분석',
         snippet: '디시 미국주식 갤러리 30분 최다 댓글글. 엔비디아 타점 및 밸류에이션 찬반 토론.',
         topic: 'stock',
@@ -248,21 +218,6 @@ let rawArticlesDatabase = [
         upvotes: 1400,
         comments: 310,
         url: 'https://gall.dcinside.com/mgallery/board/lists/?id=stockus'
-    },
-
-    // 🏢 부동산/청약 실제 개별 글
-    {
-        id: 're-real-1',
-        community: 'naver_boos',
-        title: '[부동산 스터디] 강남/마용성 분양가 상한제 단지 청약 접수 결과 및 당첨 가점 예측',
-        snippet: '부동산 스터디 카페 30분 최고 화제글. 예상 당첨 가점 컷과 실거주 의무 정리 리포트.',
-        topic: 'realestate',
-        author: '부동산고수',
-        minutesAgo: 10,
-        views: 125000,
-        upvotes: 2100,
-        comments: 540,
-        url: 'https://cafe.naver.com/jaeup'
     }
 ];
 
@@ -270,7 +225,7 @@ let rawArticlesDatabase = [
 let activeSector = 'all'; 
 let activeCommunityFilter = 'all';
 let activeTopicFilter = 'all';
-let activeSortOption = 'hot'; // Default: Highest Combined Views & Comments First!
+let activeSortOption = 'hot'; 
 let searchQuery = '';
 let bookmarkedIds = JSON.parse(localStorage.getItem('cp_bookmarks') || '[]');
 
@@ -307,8 +262,42 @@ const drawerBookmarkCount = document.getElementById('drawerBookmarkCount');
 
 // Trending Hot Keywords List
 const HOT_KEYWORDS = [
-    '전세 임대주택', '코스트코 야채코너', '사람의 진심 표정', '에디하우 기마랑이스', '미녀 레슬러', '리버풀 역전골', '삼성전자 종토방', '부동산 청약'
+    '전세 임대주택', '코스트코 야채코너', '사람의 진심 표정', '삼성전자 종토방', '엔비디아 미주갤', '부동산 청약'
 ];
+
+// ===== Topic Clustering & Metric Summing Engine =====
+function createTopicClusters(articles) {
+    const map = {};
+
+    articles.forEach(art => {
+        const key = art.clusterKey || art.community;
+        if (!map[key]) {
+            map[key] = {
+                clusterId: `cluster-${key}`,
+                clusterName: art.clusterName || art.title,
+                totalViews: 0,
+                totalComments: 0,
+                totalUpvotes: 0,
+                articles: [],
+                minMinutesAgo: 999
+            };
+        }
+
+        const cluster = map[key];
+        cluster.totalViews += art.views;
+        cluster.totalComments += art.comments;
+        cluster.totalUpvotes += art.upvotes;
+        cluster.articles.push(art);
+        if (art.minutesAgo < cluster.minMinutesAgo) {
+            cluster.minMinutesAgo = art.minutesAgo;
+        }
+    });
+
+    return Object.values(map).map(cluster => ({
+        ...cluster,
+        score: cluster.totalViews + (cluster.totalComments * 100)
+    }));
+}
 
 // ===== App Initialization =====
 function initApp() {
@@ -391,13 +380,13 @@ function triggerCommunityCrawl(isAuto = false) {
         renderFeed();
 
         const message = isAuto 
-            ? `🔄 [30분 실시간 최신글 수집] 에펨코리아 등 11개 커뮤니티 최신글 순위가 갱신되었습니다!`
-            : `✨ [30분 피드 수집 완료] 실시간 최다 조회/댓글글로 갱신되었습니다!`;
+            ? `🔄 [30분 실시간 자동 분석] 30분내 글 유사 통합 & TOP 3 갱신 완료!`
+            : `✨ [30분 통합 완료] 최다 화제성 TOP 3 이슈로 갱신되었습니다!`;
         showToast(message);
     }, 800);
 }
 
-// ===== Render Feed Ordered by Highest Views & Comments =====
+// ===== Render Feed: Clusters Similar Articles & Restricts Output STRICTLY TO TOP 3 =====
 function renderFeed() {
     let filtered = rawArticlesDatabase.filter(news => {
         const commConfig = COMMUNITY_CONFIG[news.community];
@@ -417,96 +406,112 @@ function renderFeed() {
         return true;
     });
 
-    // Sort by highest views & comments first!
-    if (activeSortOption === 'hot') {
-        filtered.sort((a, b) => (b.views + b.comments * 100) - (a.views + a.comments * 100));
-    } else {
-        filtered.sort((a, b) => a.minutesAgo - b.minutesAgo);
-    }
+    // 1. Cluster Similar Articles
+    let clusters = createTopicClusters(filtered);
 
-    let filterLabel = '30분간 최다 조회/댓글 주요 글 목록';
+    // 2. Rank Clusters by Highest Combined Hot Score
+    clusters.sort((a, b) => b.score - a.score);
+
+    // 3. STRICTLY LIMIT OUTPUT TO TOP 3 ONLY!
+    const top3Clusters = clusters.slice(0, 3);
+
+    let filterLabel = '30분내 유사글 통합 🏆 TOP 3 주요 이슈';
     if (activeCommunityFilter !== 'all') {
-        filterLabel = `${COMMUNITY_CONFIG[activeCommunityFilter].name} 30분 실시간 글 목록`;
+        filterLabel = `${COMMUNITY_CONFIG[activeCommunityFilter].name} 30분 통합 TOP 3`;
     } else if (activeSector !== 'all') {
-        const sectorNames = { general: '💬 종합/유머 30분 실시간 글', stock: '📈 주식/증시 30분 실시간 글', realestate: '🏢 부동산/청약 30분 실시간 글' };
+        const sectorNames = { general: '💬 종합/유머 30분 통합 TOP 3', stock: '📈 주식/증시 30분 통합 TOP 3', realestate: '🏢 부동산/청약 30분 통합 TOP 3' };
         filterLabel = sectorNames[activeSector];
     }
     activeFilterNameEl.textContent = filterLabel;
-    newsTotalCountEl.textContent = `총 ${filtered.length}개 실시간 글`;
+    newsTotalCountEl.textContent = `🔥 화제성 랭킹 TOP ${top3Clusters.length}위 이슈`;
 
     newsGrid.innerHTML = '';
 
-    if (filtered.length === 0) {
+    if (top3Clusters.length === 0) {
         newsGrid.innerHTML = `
             <div class="empty-feed">
                 <span class="material-symbols-rounded">find_in_page</span>
-                <p>선택하신 조건에 해당하는 30분 실시간 글이 없습니다.</p>
+                <p>선택하신 조건에 해당하는 30분 통합 TOP 3 뉴스가 없습니다.</p>
             </div>
         `;
         return;
     }
 
-    filtered.forEach((news, idx) => {
-        const config = COMMUNITY_CONFIG[news.community];
-        const isBookmarked = bookmarkedIds.includes(news.id);
+    top3Clusters.forEach((cluster, idx) => {
+        const isBookmarked = bookmarkedIds.includes(cluster.clusterId);
+        const rankMedal = idx === 0 ? '🥇 1위' : (idx === 1 ? '🥈 2위' : '🥉 3위');
+
+        // Individual article source links inside cluster card
+        const sourcesHtml = cluster.articles.map(art => {
+            const comm = COMMUNITY_CONFIG[art.community];
+            return `
+                <a href="${art.url}" target="_blank" rel="noopener noreferrer" class="source-item-link" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; margin-top: 6px; text-decoration: none; color: #fff; transition: all 0.2s ease;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span class="source-community-tag" style="background: ${comm.bgColor}; color: ${comm.color}; padding: 3px 8px; border-radius: 4px; font-weight: 700; font-size: 0.78rem;">
+                            ${comm.name}
+                        </span>
+                        <span style="font-size: 0.9rem; font-weight: 600;">${escapeHtml(art.title)}</span>
+                    </div>
+                    <span class="material-symbols-rounded" style="font-size: 18px; color: #38bdf8">open_in_new</span>
+                </a>
+            `;
+        }).join('');
 
         const card = document.createElement('article');
         card.classList.add('news-card');
-        card.style.animationDelay = `${idx * 0.04}s`;
-        card.style.cursor = 'pointer';
+        card.style.animationDelay = `${idx * 0.05}s`;
 
         card.innerHTML = `
             <div class="card-header">
-                <span class="community-badge" style="--badge-color: ${config.color}; --badge-bg: ${config.bgColor}">
-                    ${config.name}
+                <span class="cluster-badge" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); padding: 5px 12px; border-radius: 20px; font-weight: 800;">
+                    ${rankMedal} • 30분간 ${cluster.articles.length}개 유사글 합산 분석
                 </span>
-                <span class="time-ago">${news.minutesAgo}분 전 작성 / 수집</span>
+                <span class="time-ago">${cluster.minMinutesAgo}분 전 수집</span>
             </div>
 
-            <div class="card-body">
-                <a href="${news.url}" target="_blank" rel="noopener noreferrer" class="card-title" style="text-decoration: none;">
-                    ${escapeHtml(news.title)}
-                </a>
-                
-                <p class="card-snippet">${escapeHtml(news.snippet)}</p>
+            <div class="card-body" style="margin-top: 10px;">
+                <h3 class="card-title" style="font-size: 1.15rem; font-weight: 800; color: #fff; line-height: 1.4;">
+                    ${escapeHtml(cluster.clusterName)}
+                </h3>
 
-                <div style="margin-top: 10px; font-size: 0.82rem; color: #38bdf8; word-break: break-all; font-family: monospace; background: rgba(0,0,0,0.3); padding: 6px 10px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between;">
-                    <span>📌 클릭시 이동할 개별 원문 주소: ${news.url}</span>
-                    <span class="material-symbols-rounded" style="font-size: 16px">open_in_new</span>
+                <div class="cluster-metrics-bar" style="display: flex; align-items: center; gap: 20px; background: rgba(255, 255, 255, 0.05); padding: 12px 16px; border-radius: 10px; margin: 12px 0; border: 1px solid rgba(255, 255, 255, 0.1);">
+                    <div class="metric-pill" style="display: flex; align-items: center; gap: 6px;">
+                        <span class="material-symbols-rounded" style="color: #38bdf8">visibility</span>
+                        <span style="font-size: 0.9rem; color: #cbd5e1;">합산 조회수: <strong style="color: #fff; font-size: 1.05rem;">${formatNumber(cluster.totalViews)}회</strong></span>
+                    </div>
+                    <div class="metric-pill" style="display: flex; align-items: center; gap: 6px;">
+                        <span class="material-symbols-rounded" style="color: #f43f5e">mode_comment</span>
+                        <span style="font-size: 0.9rem; color: #cbd5e1;">합산 댓글수: <strong style="color: #fff; font-size: 1.05rem;">${formatNumber(cluster.totalComments)}개</strong></span>
+                    </div>
+                </div>
+
+                <div class="cluster-sources-list" style="margin-top: 14px;">
+                    <div style="font-size: 0.82rem; color: var(--text-muted); font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 4px;">
+                        <span class="material-symbols-rounded" style="font-size: 16px; color: #f59e0b">link</span>
+                        <span>30분 내 해당 통합 이슈 개별 원문 바로가기 목록 (클릭시 개별글 이동):</span>
+                    </div>
+                    ${sourcesHtml}
                 </div>
             </div>
 
-            <div class="card-footer">
+            <div class="card-footer" style="margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.08);">
                 <div class="card-stats">
-                    <div class="stat-item" title="조회수">
-                        <span class="material-symbols-rounded" style="color: #38bdf8">visibility</span>
-                        <span>조회수 ${formatNumber(news.views)}회</span>
-                    </div>
-                    <div class="stat-item" title="댓글수">
-                        <span class="material-symbols-rounded" style="color: #f43f5e">mode_comment</span>
-                        <span>댓글수 ${formatNumber(news.comments)}개</span>
+                    <div class="stat-item" title="합산 추천수">
+                        <span class="material-symbols-rounded">thumb_up</span>
+                        <span>추천 ${formatNumber(cluster.totalUpvotes)}</span>
                     </div>
                 </div>
                 <div class="card-actions">
                     <button class="action-icon-btn bookmark-btn ${isBookmarked ? 'bookmarked' : ''}" title="북마크 저장">
                         <span class="material-symbols-rounded">${isBookmarked ? 'bookmark_added' : 'bookmark_add'}</span>
                     </button>
-                    <a href="${news.url}" target="_blank" rel="noopener noreferrer" class="action-icon-btn" title="해당 개별 글 바로가기">
-                        <span class="material-symbols-rounded">open_in_new</span>
-                    </a>
                 </div>
             </div>
         `;
 
-        // Click card to open exact post URL directly
-        card.addEventListener('click', (e) => {
-            if (e.target.closest('.bookmark-btn')) return;
-            window.open(news.url, '_blank', 'noopener,noreferrer');
-        });
-
         card.querySelector('.bookmark-btn').addEventListener('click', (e) => {
             e.stopPropagation();
-            toggleBookmark(news.id);
+            toggleBookmark(cluster.clusterId);
         });
 
         newsGrid.appendChild(card);
@@ -535,30 +540,33 @@ function updateBookmarkBadge() {
 
 function renderBookmarkDrawer() {
     bookmarkList.innerHTML = '';
-    const savedNews = rawArticlesDatabase.filter(c => bookmarkedIds.includes(c.id));
+    const allClusters = createTopicClusters(rawArticlesDatabase);
+    const savedClusters = allClusters.filter(c => bookmarkedIds.includes(c.clusterId));
 
-    if (savedNews.length === 0) {
+    if (savedClusters.length === 0) {
         bookmarkList.innerHTML = `
             <div class="empty-feed">
                 <span class="material-symbols-rounded">bookmark_border</span>
-                <p>저장된 북마크 글이 없습니다.</p>
+                <p>저장된 북마크 이슈가 없습니다.</p>
             </div>
         `;
         return;
     }
 
-    savedNews.forEach(news => {
-        const config = COMMUNITY_CONFIG[news.community];
+    savedClusters.forEach(cluster => {
         const item = document.createElement('div');
         item.classList.add('bookmark-item');
         item.innerHTML = `
             <div>
-                <span class="community-badge" style="--badge-color: ${config.color}; --badge-bg: ${config.bgColor}">
-                    ${config.name}
+                <span class="cluster-badge" style="font-size: 0.75rem; padding: 2px 8px;">
+                    🔥 ${cluster.articles.length}개 글 통합
                 </span>
-                <a href="${news.url}" target="_blank" rel="noopener noreferrer" class="bookmark-item-title" style="display: block; margin-top: 6px;">
-                    ${escapeHtml(news.title)}
-                </a>
+                <div style="font-weight: 700; font-size: 0.95rem; margin-top: 4px; color: #fff;">
+                    ${escapeHtml(cluster.clusterName)}
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                    합산 조회 ${formatNumber(cluster.totalViews)} | 댓글 ${formatNumber(cluster.totalComments)}
+                </div>
             </div>
             <button class="action-icon-btn remove-bookmark-btn" title="삭제">
                 <span class="material-symbols-rounded">delete</span>
@@ -566,7 +574,7 @@ function renderBookmarkDrawer() {
         `;
 
         item.querySelector('.remove-bookmark-btn').addEventListener('click', () => {
-            toggleBookmark(news.id);
+            toggleBookmark(cluster.clusterId);
             renderBookmarkDrawer();
         });
 
