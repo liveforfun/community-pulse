@@ -1,6 +1,6 @@
 // ===== 30-Minute Multi-Sector Community News Aggregator Engine =====
 
-// Configuration for 11 Communities across 3 Sectors with Live Real-time Feeds (더쿠 제외 완료)
+// Configuration for 11 Communities across 3 Sectors with Live Real-time Feeds
 const COMMUNITY_CONFIG = {
     // Sector 1: 💬 종합/유머
     fmkorea: {
@@ -305,17 +305,6 @@ const activeFilterNameEl = document.getElementById('activeFilterName');
 const newsTotalCountEl = document.getElementById('newsTotalCount');
 const newsGrid = document.getElementById('newsGrid');
 
-// Modal Elements
-const newsDetailModal = document.getElementById('newsDetailModal');
-const closeDetailModalBtn = document.getElementById('closeDetailModalBtn');
-const modalCommunityBadge = document.getElementById('modalCommunityBadge');
-const modalTitle = document.getElementById('modalTitle');
-const modalMeta = document.getElementById('modalMeta');
-const modalSummary = document.getElementById('modalSummary');
-const modalStats = document.getElementById('modalStats');
-const modalBookmarkBtn = document.getElementById('modalBookmarkBtn');
-const modalOriginalLink = document.getElementById('modalOriginalLink');
-
 // Bookmark Drawer Elements
 const bookmarkDrawerModal = document.getElementById('bookmarkDrawerModal');
 const openBookmarkBtn = document.getElementById('openBookmarkBtn');
@@ -556,6 +545,7 @@ function renderFeed() {
         card.classList.add('news-card');
         card.style.style = `--card-brand-color: ${config.color}`;
         card.style.animationDelay = `${idx * 0.03}s`;
+        card.style.cursor = 'pointer';
 
         card.innerHTML = `
             <div class="card-header">
@@ -565,7 +555,9 @@ function renderFeed() {
                 <span class="time-ago">${news.minutesAgo}분 전</span>
             </div>
             <div class="card-body">
-                <h3 class="card-title">${escapeHtml(news.title)}</h3>
+                <a href="${news.url}" target="_blank" rel="noopener noreferrer" class="card-title" style="text-decoration: none;">
+                    ${escapeHtml(news.title)}
+                </a>
                 <p class="card-snippet">${escapeHtml(news.snippet)}</p>
             </div>
             <div class="card-footer">
@@ -594,7 +586,12 @@ function renderFeed() {
             </div>
         `;
 
-        card.querySelector('.card-title').addEventListener('click', () => openDetailModal(news));
+        // Directly open post link when card or title is clicked
+        card.addEventListener('click', (e) => {
+            if (e.target.closest('.bookmark-btn')) return; // Ignore bookmark button click
+            window.open(news.url, '_blank', 'noopener,noreferrer');
+        });
+
         card.querySelector('.bookmark-btn').addEventListener('click', (e) => {
             e.stopPropagation();
             toggleBookmark(news.id);
@@ -602,52 +599,6 @@ function renderFeed() {
 
         newsGrid.appendChild(card);
     });
-}
-
-// ===== Detail Modal Logic =====
-let currentSelectedNews = null;
-
-function openDetailModal(news) {
-    currentSelectedNews = news;
-    const config = COMMUNITY_CONFIG[news.community];
-    const isBookmarked = bookmarkedIds.includes(news.id);
-
-    modalCommunityBadge.textContent = config.name;
-    modalCommunityBadge.style.backgroundColor = config.bgColor;
-    modalCommunityBadge.style.color = config.color;
-
-    modalTitle.textContent = news.title;
-    modalSummary.textContent = news.snippet;
-
-    modalMeta.innerHTML = `
-        <span>작성자: ${news.author}</span> •
-        <span>수집 시간: ${news.minutesAgo}분 전</span>
-    `;
-
-    modalStats.innerHTML = `
-        <div class="stat-item"><span class="material-symbols-rounded">visibility</span> 조회 ${formatNumber(news.views)}</div>
-        <div class="stat-item"><span class="material-symbols-rounded">thumb_up</span> 추천 ${formatNumber(news.upvotes)}</div>
-        <div class="stat-item"><span class="material-symbols-rounded">mode_comment</span> 댓글 ${formatNumber(news.comments)}</div>
-    `;
-
-    modalOriginalLink.href = news.url;
-    updateModalBookmarkBtn(isBookmarked);
-
-    newsDetailModal.classList.add('active');
-}
-
-function updateModalBookmarkBtn(isBookmarked) {
-    if (isBookmarked) {
-        modalBookmarkBtn.innerHTML = `
-            <span class="material-symbols-rounded" style="color: #f59e0b">bookmark_added</span>
-            <span>북마크 해제</span>
-        `;
-    } else {
-        modalBookmarkBtn.innerHTML = `
-            <span class="material-symbols-rounded">bookmark_add</span>
-            <span>북마크 저장</span>
-        `;
-    }
 }
 
 // ===== Bookmark Logic =====
@@ -663,10 +614,6 @@ function toggleBookmark(id) {
     localStorage.setItem('cp_bookmarks', JSON.stringify(bookmarkedIds));
     updateBookmarkBadge();
     renderFeed();
-
-    if (currentSelectedNews && currentSelectedNews.id === id) {
-        updateModalBookmarkBtn(bookmarkedIds.includes(id));
-    }
 }
 
 function updateBookmarkBadge() {
@@ -765,11 +712,6 @@ function setupEventListeners() {
         });
     });
 
-    closeDetailModalBtn.addEventListener('click', () => newsDetailModal.classList.remove('active'));
-    modalBookmarkBtn.addEventListener('click', () => {
-        if (currentSelectedNews) toggleBookmark(currentSelectedNews.id);
-    });
-
     openBookmarkBtn.addEventListener('click', () => {
         renderBookmarkDrawer();
         bookmarkDrawerModal.classList.add('active');
@@ -777,7 +719,6 @@ function setupEventListeners() {
     closeBookmarkBtn.addEventListener('click', () => bookmarkDrawerModal.classList.remove('active'));
 
     window.addEventListener('click', (e) => {
-        if (e.target === newsDetailModal) newsDetailModal.classList.remove('active');
         if (e.target === bookmarkDrawerModal) bookmarkDrawerModal.classList.remove('active');
     });
 }
