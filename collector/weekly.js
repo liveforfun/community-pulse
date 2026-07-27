@@ -34,6 +34,10 @@ function consider(bestByTitle, cluster, slotLabel) {
         totalComments: cluster.totalComments,
         deltaViews: cluster.deltaViews,
         deltaComments: cluster.deltaComments,
+        // score 가 30분 환산 기준이므로 표시용 증가분도 환산값을 따라간다.
+        // 환산 필드가 없는 옛 스냅샷은 원값으로 대체한다.
+        deltaViewsNorm: cluster.deltaViewsNorm === undefined ? cluster.deltaViews : cluster.deltaViewsNorm,
+        deltaCommentsNorm: cluster.deltaCommentsNorm === undefined ? cluster.deltaComments : cluster.deltaCommentsNorm,
         deltaBasis: cluster.deltaBasis,
         cumulativeScore: cluster.cumulativeScore,
         viewsComplete: cluster.viewsComplete,

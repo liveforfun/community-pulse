@@ -1,14 +1,23 @@
 'use strict';
 
-// 점수는 "이 30분 동안 늘어난 조회수 + 댓글수" 다.
+// 점수는 "30분 동안 늘어난 조회수 + 댓글수" 다.
 //
 // 누적값을 쓰면 오래된 글이 구조적으로 이긴다(작성 이후 계속 쌓인 값이므로).
 // 실제로 누적 방식에서는 10시간 전에 쓰인 글이 2위였다. 증분으로 바꾸면
 // "지금 뜨거워지고 있는 글"이 올라온다.
 //
+// 수집 간격은 실제로는 30분이 아닐 수 있으므로(delta.js 참고) 순위에는
+// 30분 환산값(deltaViewsNorm/deltaCommentsNorm)을 쓴다. 환산 전 원값도 함께 남긴다.
+//
 // 지표 제공 범위가 소스마다 다르므로(조회수를 안 주는 곳이 있다) 없는 값은
 // 만들어내지 않고 null 로 두며, 어떤 근거로 점수를 냈는지 scoreBasis 에 남긴다.
 const COMMENT_WEIGHT = 100;
+
+/** 30분 환산값을 꺼낸다. 환산 필드가 없는 옛 데이터는 원값으로 대체한다. */
+function normOf(member, normKey, rawKey) {
+    const v = member[normKey];
+    return v === undefined ? member[rawKey] : v;
+}
 
 function sumOrNull(values) {
     const present = values.filter(v => v !== null && v !== undefined);
@@ -39,10 +48,15 @@ function scoreCluster(members) {
     else if (viewsComplete && !commentsComplete) scoreBasis = totalComments === null ? 'views-only' : 'partial';
     else scoreBasis = 'partial';
 
-    // 증분
+    // 증분 — 원값(잰 그대로)과 30분 환산값을 각각 합산한다.
+    // 환산 필드가 없는 옛 데이터로 호출되면 원값을 그대로 쓴다.
     const deltaViews = sumOrNull(members.map(m => m.deltaViews));
     const deltaComments = sumOrNull(members.map(m => m.deltaComments));
-    const deltaScore = (deltaViews || 0) + (deltaComments || 0) * COMMENT_WEIGHT;
+    const deltaViewsNorm = sumOrNull(members.map(m => normOf(m, 'deltaViewsNorm', 'deltaViews')));
+    const deltaCommentsNorm = sumOrNull(members.map(m => normOf(m, 'deltaCommentsNorm', 'deltaComments')));
+
+    // 순위는 환산값 기준 — 수집 간격이 벌어진 슬롯의 점수가 부풀지 않게 한다
+    const deltaScore = (deltaViewsNorm || 0) + (deltaCommentsNorm || 0) * COMMENT_WEIGHT;
 
     // 증분 근거: 하나라도 실측(measured)이면 measured, 아니면 가장 약한 근거를 따른다
     const bases = members.map(m => m.deltaBasis).filter(Boolean);
@@ -55,10 +69,12 @@ function scoreCluster(members) {
     const measurable = deltaViews !== null || deltaComments !== null;
 
     return {
-        // 순위에 쓰는 점수 = 증분
+        // 순위에 쓰는 점수 = 30분 환산 증분
         score: deltaScore,
         deltaViews,
         deltaComments,
+        deltaViewsNorm,
+        deltaCommentsNorm,
         deltaBasis,
         measurable,
         // 누적값도 함께 보관한다(카드에서 참고용으로 보여준다)

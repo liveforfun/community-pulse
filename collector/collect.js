@@ -72,10 +72,11 @@ function buildTop(items) {
 
     const scored = clusters.map(c => {
         const metrics = scoreCluster(c.members);
-        // 대표 제목은 그룹 내 증분이 가장 큰 글의 원제목
+        // 대표 제목은 그룹 내 증분이 가장 큰 글의 원제목 (점수와 같은 30분 환산 기준)
+        const norm = (m, key, rawKey) => (m[key] === undefined ? m[rawKey] : m[key]);
         const sortedMembers = c.members.slice().sort((a, b) => {
-            const av = (a.deltaViews || 0) + (a.deltaComments || 0) * 100;
-            const bv = (b.deltaViews || 0) + (b.deltaComments || 0) * 100;
+            const av = (norm(a, 'deltaViewsNorm', 'deltaViews') || 0) + (norm(a, 'deltaCommentsNorm', 'deltaComments') || 0) * 100;
+            const bv = (norm(b, 'deltaViewsNorm', 'deltaViews') || 0) + (norm(b, 'deltaCommentsNorm', 'deltaComments') || 0) * 100;
             if (bv !== av) return bv - av;
             return (b.views || 0) - (a.views || 0);
         });
@@ -93,6 +94,8 @@ function buildTop(items) {
             score: metrics.score,
             deltaViews: metrics.deltaViews,
             deltaComments: metrics.deltaComments,
+            deltaViewsNorm: metrics.deltaViewsNorm,
+            deltaCommentsNorm: metrics.deltaCommentsNorm,
             deltaBasis: metrics.deltaBasis,
             measurable: metrics.measurable,
             cumulativeScore: metrics.cumulativeScore,
@@ -106,6 +109,8 @@ function buildTop(items) {
                 comments: m.comments,
                 deltaViews: m.deltaViews,
                 deltaComments: m.deltaComments,
+                deltaViewsNorm: m.deltaViewsNorm,
+                deltaCommentsNorm: m.deltaCommentsNorm,
                 deltaBasis: m.deltaBasis,
                 recommends: m.recommends,
                 postedAt: m.postedAt,
@@ -154,11 +159,15 @@ async function main() {
         });
     });
 
-    // 2) 직전 스냅샷과 비교해 증분을 붙인다
+    // 2) 직전 스냅샷과 비교해 증분을 붙인다.
+    //    예약 실행이 건너뛰어져 간격이 벌어질 수 있으므로, 실제 경과시간을 재서
+    //    실측 증가분을 30분치로 환산한다(delta.js 참고).
     const slot = snapshotStore.slotOf(capturedAt);
     const slotStart = new Date(Date.parse(slot.label) - delta.SLOT_MINUTES * 60000);
     const previous = delta.loadPrevious(snapshotStore.DATA_DIR, slot.label);
-    allItems = delta.attachDeltas(allItems, previous, slotStart);
+    const elapsedMinutes = delta.elapsedMinutesSince(previous, capturedAt);
+    const normalization = delta.normalizationFor(elapsedMinutes);
+    allItems = delta.attachDeltas(allItems, previous, slotStart, normalization);
 
     let { top, clusters, clusterCount } = buildTop(allItems);
 
@@ -181,6 +190,17 @@ async function main() {
         // 순위 산정 방식. 'delta' = 직전 스냅샷 대비 증가분, 'cumulative-fallback' = 비교 대상 없음
         scoreMode,
         previousSlot: previous ? previous.slot : null,
+        // 직전 수집과의 **실제** 경과분. 예약 실행이 건너뛰어지면 30분이 아니다.
+        elapsedMinutes,
+        // 점수를 30분치로 환산했는지 — UI 가 "30분 증가분"을 그대로 주장하지 않게 한다
+        deltaNormalization: {
+            applied: normalization.applied,
+            reason: normalization.reason,
+            factor: normalization.applied ? Math.round(normalization.factor * 1000) / 1000 : 1,
+            slotMinutes: delta.SLOT_MINUTES,
+            // 환산 대상은 실측 증가분뿐이다 (new-in-window 는 이미 30분 이하치)
+            appliedTo: 'measured'
+        },
         sources,
         top,
         clusters,
@@ -199,6 +219,10 @@ async function main() {
     console.log('점수기준  : ' + scoreMode + (previous ? ' (직전 ' + previous.slot + ' 대비)' : ' (비교 대상 없음)') +
         ' | 실측 ' + (basisCount.measured || 0) + ' · 창내신규 ' + (basisCount['new-in-window'] || 0) +
         ' · 최초관측 ' + (basisCount['first-seen'] || 0));
+    console.log('수집 간격 : ' + (elapsedMinutes === null ? '비교 대상 없음' : elapsedMinutes + '분') +
+        (normalization.applied
+            ? ' → 30분 환산 ×' + (Math.round(normalization.factor * 1000) / 1000)
+            : ' → 환산 안 함 (' + normalization.reason + ')'));
     const normalized = allItems.filter(i => i.postedAtPrecision === 'minute').length;
     console.log('작성시간  : 분단위 확정 ' + normalized + '/' + allItems.length + '건');
     console.log('키워드    : ' + saved.keywordSummary.keywordCount + '개 (' +
@@ -223,8 +247,8 @@ async function main() {
     top.forEach(c => {
         console.log('  ' + c.rank + '. ' + c.title);
         console.log('     증분점수 ' + c.score.toLocaleString() +
-            ' (조회 +' + (c.deltaViews === null ? '?' : c.deltaViews.toLocaleString()) +
-            ', 댓글 +' + (c.deltaComments === null ? '?' : c.deltaComments.toLocaleString()) + ')' +
+            ' (30분 환산 조회 +' + (c.deltaViewsNorm === null ? '?' : c.deltaViewsNorm.toLocaleString()) +
+            ', 댓글 +' + (c.deltaCommentsNorm === null ? '?' : c.deltaCommentsNorm.toLocaleString()) + ')' +
             ' | 누적조회 ' + (c.totalViews === null ? '미제공' : c.totalViews.toLocaleString()) +
             ' | ' + c.deltaBasis + ' | ' + c.communities.join(', '));
     });

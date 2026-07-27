@@ -115,6 +115,35 @@ function delta(value) {
     return '+' + Number(value).toLocaleString();
 }
 
+/**
+ * 수집 간격이 30분에서 벗어났는지 본다.
+ *
+ * GitHub Actions 예약 실행은 부하에 따라 건너뛰어져 간격이 몇 시간까지 벌어진다.
+ * 수집기가 증가분을 30분치로 환산해 순위를 매기므로, 화면도 "30분 증가분"이라고
+ * 단정하지 않고 실제 경과시간을 밝힌다. 옛 스냅샷에는 이 필드가 없다.
+ */
+function windowInfo(snapshot) {
+    if (!snapshot) return null;
+    const minutes = snapshot.elapsedMinutes;
+    if (minutes === null || minutes === undefined) return null;
+
+    const norm = snapshot.deltaNormalization || {};
+    const slotMinutes = norm.slotMinutes || 30;
+    // 몇 분 어긋나는 것은 예약 실행의 정상 범위다. 눈에 띄는 차이만 알린다.
+    const off = Math.abs(minutes - slotMinutes) > slotMinutes * 0.2;
+
+    return {
+        minutes,
+        slotMinutes,
+        normalized: norm.applied === true,
+        reason: norm.reason || null,
+        off,
+        text: minutes >= 120
+            ? Math.floor(minutes / 60) + '시간 ' + Math.round(minutes % 60) + '분'
+            : Math.round(minutes) + '분'
+    };
+}
+
 function communityOf(id) {
     return COMMUNITY_CONFIG[id] || { id, name: id, color: '#94a3b8', bgColor: 'rgba(148,163,184,0.14)' };
 }
@@ -231,13 +260,26 @@ function renderSourceStatus() {
 
     const okCount = state.snapshot.sources.filter(s => s.status === 'ok').length;
 
+    // 예약 실행이 건너뛰어져 간격이 벌어진 수집인지 밝힌다 — 순위 해석에 영향이 있다
+    const win = windowInfo(state.snapshot);
+    const windowNote = win && win.off
+        ? '<div class="basis-warning" style="margin-top:12px;margin-bottom:0">' +
+          '<span class="material-symbols-rounded">schedule</span>' +
+          '직전 수집과 ' + escapeHtml(win.text) + ' 차이입니다(예정 간격 ' + win.slotMinutes + '분). ' +
+          (win.normalized
+              ? '증가분을 30분치로 환산해 순위를 매겼습니다.'
+              : '환산하지 않은 원값으로 순위를 매겼습니다.') +
+          '</div>'
+        : '';
+
     el.sourceStatus.innerHTML =
         '<div class="source-status-head">' +
         '<span class="material-symbols-rounded">monitor_heart</span>' +
         '<strong>소스 수집 상태</strong>' +
         '<span class="source-status-sum">' + okCount + ' / ' + state.snapshot.sources.length + ' 정상</span>' +
         '</div>' +
-        '<div class="source-chips">' + items.join('') + '</div>';
+        '<div class="source-chips">' + items.join('') + '</div>' +
+        windowNote;
 }
 
 /** 커뮤니티 필터·검색어를 적용해 TOP N 클러스터를 재산출한다 */
@@ -281,8 +323,11 @@ function renderFeed() {
         : state.snapshot && state.snapshot.isDaily
         ? '하루 종합'
         : '이번 수집';
+    const win = windowInfo(state.snapshot);
     const scoreLabel = state.snapshot && state.snapshot.scoreMode === 'cumulative-fallback'
         ? '누적 조회수+댓글수 기준(비교 대상 없음)'
+        : win && win.off && win.normalized
+        ? '30분 환산 증가분 기준'
         : '30분 증가분 기준';
     el.activeFilterName.textContent =
         filterName + ' · ' + periodName + ' ' + scoreLabel + ' TOP ' + topN;
@@ -313,6 +358,17 @@ function renderFeed() {
     // 4위 이하는 메달이 없으므로 숫자로 표기한다
     const MEDALS = ['🥇 1위', '🥈 2위', '🥉 3위'];
     const rankLabel = idx => MEDALS[idx] || idx + 1 + '위';
+
+    // 점수·지표는 30분 환산값이다. 환산 필드가 없는 옛 스냅샷은 원값으로 대체한다.
+    const deltaOf = (c, normKey, rawKey) => (c[normKey] === undefined ? c[rawKey] : c[normKey]);
+    const deltaLabel = win && win.off && win.normalized ? '30분 환산' : '30분';
+    const windowChip = win && win.off
+        ? '<div class="basis-chip"><span class="material-symbols-rounded">schedule</span>' +
+          (win.normalized
+              ? '이번 수집은 직전 수집과 ' + win.text + ' 차이입니다 — 증가분을 30분치로 환산해 비교했습니다'
+              : '이번 수집은 직전 수집과 ' + win.text + ' 차이입니다 — 환산하지 않은 원값입니다') +
+          '</div>'
+        : '';
 
     el.newsGrid.innerHTML = clusters
         .map((cluster, idx) => {
@@ -358,8 +414,8 @@ function renderFeed() {
                 '</summary>' +
                 '<div class="metrics-body">' +
                 '<div class="card-metrics">' +
-                '<div class="metric-box"><span class="metric-label">30분 조회 증가</span><strong>' + delta(cluster.deltaViews) + '</strong></div>' +
-                '<div class="metric-box"><span class="metric-label">30분 댓글 증가</span><strong>' + delta(cluster.deltaComments) + '</strong></div>' +
+                '<div class="metric-box"><span class="metric-label">' + deltaLabel + ' 조회 증가</span><strong>' + delta(deltaOf(cluster, 'deltaViewsNorm', 'deltaViews')) + '</strong></div>' +
+                '<div class="metric-box"><span class="metric-label">' + deltaLabel + ' 댓글 증가</span><strong>' + delta(deltaOf(cluster, 'deltaCommentsNorm', 'deltaComments')) + '</strong></div>' +
                 '<div class="metric-box"><span class="metric-label">증분 점수</span><strong>' + cluster.score.toLocaleString() + '</strong></div>' +
                 '</div>' +
                 '<div class="card-metrics cumulative">' +
@@ -367,6 +423,7 @@ function renderFeed() {
                 '<div class="metric-box"><span class="metric-label">누적 댓글수</span><strong>' + metric(cluster.totalComments) + '</strong></div>' +
                 '<div class="metric-box"><span class="metric-label">묶인 글</span><strong>' + cluster.memberCount + '건</strong></div>' +
                 '</div>' +
+                windowChip +
                 (deltaNote
                     ? '<div class="basis-chip"><span class="material-symbols-rounded">schedule</span>' + escapeHtml(deltaNote) + '</div>'
                     : '') +

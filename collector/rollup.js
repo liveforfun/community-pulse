@@ -96,6 +96,9 @@ function buildDaily(dataDir, day) {
                     totalComments: cluster.totalComments,
                     deltaViews: cluster.deltaViews,
                     deltaComments: cluster.deltaComments,
+                    // score 와 같은 30분 환산 기준. 옛 스냅샷은 원값으로 대체한다.
+                    deltaViewsNorm: cluster.deltaViewsNorm === undefined ? cluster.deltaViews : cluster.deltaViewsNorm,
+                    deltaCommentsNorm: cluster.deltaCommentsNorm === undefined ? cluster.deltaComments : cluster.deltaCommentsNorm,
                     deltaBasis: cluster.deltaBasis,
                     cumulativeScore: cluster.cumulativeScore,
                     viewsComplete: cluster.viewsComplete,
