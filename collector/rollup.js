@@ -201,7 +201,13 @@ function listDaily(dataDir) {
                 path: 'daily/' + f,
                 snapshotCount: daily.snapshotCount,
                 itemCountTotal: daily.itemCountTotal,
-                top1: daily.top.length > 0 ? daily.top[0].title : null
+                top1: daily.top.length > 0 ? daily.top[0].title : null,
+                // 이력에서 원문으로 바로 가기 위한 링크. items 는 증분순이라 items[0] 이
+                // top1 제목의 출처다. 매 실행마다 daily 파일을 다시 읽으므로 옛 날짜도 채워진다.
+                top1Url:
+                    daily.top.length > 0 && (daily.top[0].items || []).length > 0
+                        ? daily.top[0].items[0].url || null
+                        : null
             };
         })
         .filter(Boolean);

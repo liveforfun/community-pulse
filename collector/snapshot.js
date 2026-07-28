@@ -81,6 +81,30 @@ function prune(nowDate) {
 }
 
 /**
+ * 그 시점 1위 그룹의 대표 글 URL.
+ *
+ * 이력 목록은 1위 그룹의 제목(top1)만 보여주는데, 제목만으로는 원문에 갈 수 없었다.
+ * items 는 증분이 큰 순으로 정렬돼 있으므로 items[0] 이 곧 top1 제목의 출처다.
+ */
+function top1UrlOf(snapshot) {
+    if (!snapshot || !snapshot.top || snapshot.top.length === 0) return null;
+    const items = snapshot.top[0].items || [];
+    return items.length > 0 ? items[0].url || null : null;
+}
+
+/**
+ * 옛 인덱스 항목에는 top1Url 이 없다. 그 슬롯의 원본을 한 번 읽어 채운다.
+ * 채워진 뒤에는 다시 읽지 않으므로 비용은 항목당 최초 1회뿐이다.
+ * 원본이 보관 기간을 넘겨 삭제됐으면 null 로 남는다(링크 없이 표시된다).
+ */
+function backfillTop1Url(entry) {
+    if (entry.top1Url !== undefined) return entry;
+    return Object.assign({}, entry, {
+        top1Url: top1UrlOf(readJson(path.join(DATA_DIR, entry.path), null))
+    });
+}
+
+/**
  * 스냅샷을 저장하고 인덱스를 갱신한다. 기존 파일을 덮어쓰지 않고 슬롯별로 누적한다.
  * (같은 슬롯이 재실행되면 그 슬롯만 갱신된다 — Actions 재시도 대비)
  */
@@ -99,10 +123,12 @@ function save(snapshot) {
 
     // 인덱스 갱신
     const index = readJson(path.join(DATA_DIR, 'index.json'), { slots: [] });
-    const slots = (index.slots || []).filter(s => {
-        if (s.slot === slot.label) return false; // 같은 슬롯은 새 항목으로 교체
-        return !removedDays.some(day => s.path.indexOf('snapshots/' + day + '/') === 0);
-    });
+    const slots = (index.slots || [])
+        .filter(s => {
+            if (s.slot === slot.label) return false; // 같은 슬롯은 새 항목으로 교체
+            return !removedDays.some(day => s.path.indexOf('snapshots/' + day + '/') === 0);
+        })
+        .map(backfillTop1Url);
 
     const okSources = snapshot.sources.filter(s => s.status === 'ok').length;
 
@@ -111,6 +137,7 @@ function save(snapshot) {
         path: relPath,
         capturedAt: snapshot.capturedAt,
         top1: snapshot.top.length > 0 ? snapshot.top[0].title : null,
+        top1Url: top1UrlOf(snapshot),
         itemCount: snapshot.itemCount,
         clusterCount: snapshot.clusterCount,
         okSources,

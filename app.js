@@ -788,27 +788,53 @@ function renderTimeline() {
         return;
     }
 
-    const slotRows = slots.slice(0, 48).map(s => {
-        const active = state.snapshot && !state.snapshot.isDaily && state.snapshot.slot === s.slot;
-        return (
-            '<button class="timeline-row' + (active ? ' active' : '') + '" data-path="' + escapeHtml(s.path) + '" data-kind="slot">' +
-            '<span class="timeline-time">' + formatSlot(s.slot) + '</span>' +
-            '<span class="timeline-top1">' + escapeHtml(s.top1 || '수집 결과 없음') + '</span>' +
-            '<span class="timeline-meta">' + s.itemCount + '건 · ' + s.okSources + '/' + s.totalSources + '</span>' +
-            '</button>'
-        );
-    });
+    // 행 본문은 1위 그룹 대표 글의 원문 링크다(제목만 보여주고 갈 곳이 없으면 소용이 없다).
+    // 그 시점 순위를 다시 불러오는 기존 동작은 오른쪽 버튼으로 남긴다.
+    // top1Url 이 없는 경우: 수집 결과가 없던 슬롯, 또는 아직 이 필드 없이 기록된 옛 인덱스 항목.
+    const timelineRow = row => {
+        const body =
+            '<span class="timeline-time">' + escapeHtml(row.time) + '</span>' +
+            '<span class="timeline-top1">' + escapeHtml(row.title || '수집 결과 없음') + '</span>' +
+            '<span class="timeline-meta">' + escapeHtml(row.meta) + '</span>';
 
-    const dayRows = days.map(d => {
-        const active = state.snapshot && state.snapshot.isDaily && state.snapshot.date === d.date;
         return (
-            '<button class="timeline-row daily' + (active ? ' active' : '') + '" data-path="' + escapeHtml(d.path) + '" data-kind="daily">' +
-            '<span class="timeline-time">' + escapeHtml(d.date.slice(5)) + '</span>' +
-            '<span class="timeline-top1">' + escapeHtml(d.top1 || '수집 결과 없음') + '</span>' +
-            '<span class="timeline-meta">' + d.snapshotCount + '회 · 누적 ' + d.itemCountTotal.toLocaleString() + '건</span>' +
-            '</button>'
+            '<div class="timeline-row' + (row.daily ? ' daily' : '') + (row.active ? ' active' : '') + '">' +
+            (row.url
+                ? '<a class="timeline-open" href="' + escapeHtml(row.url) + '" target="_blank" rel="noopener noreferrer"' +
+                  ' title="' + escapeHtml(row.title || '') + ' — 원문 열기">' + body + '</a>'
+                : '<span class="timeline-open nolink" title="원문 링크가 없는 항목입니다">' + body + '</span>') +
+            '<button class="timeline-load" data-path="' + escapeHtml(row.path) + '" data-kind="' + row.kind + '"' +
+            ' title="이 시점 순위 보기" aria-label="' + escapeHtml(row.time) + ' 순위 보기">' +
+            '<span class="material-symbols-rounded">bar_chart</span>' +
+            '</button>' +
+            '</div>'
         );
-    });
+    };
+
+    const slotRows = slots.slice(0, 48).map(s =>
+        timelineRow({
+            kind: 'slot',
+            path: s.path,
+            time: formatSlot(s.slot),
+            title: s.top1,
+            url: s.top1Url,
+            meta: s.itemCount + '건 · ' + s.okSources + '/' + s.totalSources,
+            active: state.snapshot && !state.snapshot.isDaily && state.snapshot.slot === s.slot
+        })
+    );
+
+    const dayRows = days.map(d =>
+        timelineRow({
+            kind: 'daily',
+            daily: true,
+            path: d.path,
+            time: d.date.slice(5),
+            title: d.top1,
+            url: d.top1Url,
+            meta: d.snapshotCount + '회 · 누적 ' + d.itemCountTotal.toLocaleString() + '건',
+            active: state.snapshot && state.snapshot.isDaily && state.snapshot.date === d.date
+        })
+    );
 
     el.timelineList.innerHTML =
         '<div class="timeline-group-label">30분 단위 원본</div>' +
@@ -817,9 +843,9 @@ function renderTimeline() {
             ? '<div class="timeline-group-label">일별 요약 · 영구 보존</div>' + dayRows.join('')
             : '');
 
-    Array.from(el.timelineList.querySelectorAll('.timeline-row')).forEach(row => {
-        row.onclick = () =>
-            row.dataset.kind === 'daily' ? loadDaily(row.dataset.path) : loadSnapshot(row.dataset.path);
+    Array.from(el.timelineList.querySelectorAll('.timeline-load')).forEach(btn => {
+        btn.onclick = () =>
+            btn.dataset.kind === 'daily' ? loadDaily(btn.dataset.path) : loadSnapshot(btn.dataset.path);
     });
 }
 
