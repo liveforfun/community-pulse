@@ -46,6 +46,9 @@ jobs:
         run: |
           set -u
 
+          echo "이 잡은 30분마다 ${ITERATIONS}회 수집하며 약 5.5시간 동안 실행된다."
+          echo "수집 사이에는 대기만 하므로 오래 걸리는 것이 정상이다 — 취소하지 말 것."
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
@@ -73,11 +76,20 @@ jobs:
           # 고정 sleep 1800 은 매 회차 실행시간만큼 뒤로 밀려 결국 두 수집이 같은 슬롯에
           # 들어간다(slotOf 는 분을 :00/:30 으로 내림). 경계 기준으로 재계산해 드리프트를 없앤다.
           # +60초는 경계 직전에 깨어나 이전 슬롯으로 잘못 분류되는 것을 막는 여유다.
+          #
+          # 대기 중에는 2분마다 남은 시간을 찍는다. 한 번에 sleep 1740 을 걸면 로그가
+          # 29분간 완전히 멎어서 "잡이 멈췄다"고 오해하고 취소하게 된다(실제로 그랬다).
+          # 이 잡은 5.5시간 살아 있는 게 정상이므로, 살아 있다는 신호를 계속 남긴다.
           sleep_to_next_slot() {
             now=$(date +%s)
             next=$(( (now / 1800 + 1) * 1800 + 60 ))
-            echo "다음 수집까지 $(( next - now ))초 대기 ($(date -u -d "@${next}" '+%H:%M:%S UTC'))"
-            sleep $(( next - now ))
+            echo "다음 수집 예정: $(date -u -d "@${next}" '+%H:%M:%S UTC') — 지금부터 대기(정상)"
+            while :; do
+              remain=$(( next - $(date +%s) ))
+              [ "${remain}" -le 0 ] && break
+              printf '  … 대기 중 — 남은 시간 %d분 %d초\n' "$(( remain / 60 ))" "$(( remain % 60 ))"
+              if [ "${remain}" -gt 120 ]; then sleep 120; else sleep "${remain}"; fi
+            done
           }
 
           for n in $(seq 1 "${ITERATIONS}"); do
