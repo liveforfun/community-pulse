@@ -2,15 +2,22 @@ name: 30분 단위 커뮤니티 수집
 
 on:
   schedule:
-    # 30분마다. 분을 7·37 로 어긋나게 두는 이유:
-    # "*/30" 은 매시 :00·:30 인데 전 세계 워크플로가 이 두 분에 몰려 스케줄 큐에서 계속 밀린다.
-    # 실제로 "*/30" 으로 돌린 2026-07-27 하루 동안 42회 예상 중 12회만 실행됐다(전부 성공 — 스킵이었다).
-    # GitHub 은 어떤 cron 도 실행을 보장하지 않으므로, 간격이 벌어져도 순위가 깨지지 않도록
-    # 수집기가 증가분을 30분치로 환산한다(collector/delta.js).
+    # 이 cron 은 더 이상 "30분마다 수집"을 담당하지 않는다. 체인 재시작용 안전망이다.
+    #
+    # 배경: GitHub 은 부하가 높으면 schedule 이벤트를 큐잉하지 않고 그냥 버린다.
+    # 실측(2026-07-27~28) 결과 하루 48회 예상 중 10~12회만 실행됐다(전부 성공 — 드롭이었다).
+    # 분을 ":00/:30" 에서 "7,37" 로 옮겨도 평균 간격이 117분 → 141분으로 오히려 나빠져,
+    # cron 표현식으로는 해결할 수 없는 문제임이 확인됐다.
+    #
+    # 그래서 수집 주기는 아래 잡 안의 루프가 책임지고(30분 경계마다 1회, 약 5.5시간),
+    # cron 은 체인이 끝났거나 러너 장애로 죽었을 때 다시 띄우는 역할만 한다.
+    # concurrency 설정 덕분에 체인이 도는 동안 걸린 예약은 대기했다가 종료 직후 이어받는다.
     - cron: "7,37 * * * *"
   workflow_dispatch:
 
-# 같은 시각에 두 번 돌아 커밋이 충돌하지 않게 한다
+# 같은 시각에 두 번 돌아 커밋이 충돌하지 않게 한다.
+# cancel-in-progress: false 라서 실행 중인 체인은 보호되고, 새 예약은 pending 으로 대기한다
+# (GitHub 은 그룹당 pending 을 1개만 유지) → 체인 종료 직후 자동으로 다음 체인이 시작된다.
 concurrency:
   group: collect
   cancel-in-progress: false
@@ -21,6 +28,8 @@ permissions:
 jobs:
   collect:
     runs-on: ubuntu-latest
+    # 루프 5.5시간 + 여유. GitHub 잡 상한(6시간)에 걸려 강제 종료되지 않도록 아래로 둔다.
+    timeout-minutes: 340
     steps:
       - uses: actions/checkout@v4
 
@@ -29,26 +38,57 @@ jobs:
           node-version: "20"
 
       # 외부 의존성이 없으므로 npm install 이 필요 없다
-      - name: 수집 실행
-        run: node collector/collect.js
-        # 전 소스 실패 시 exit 1 이지만, 상태 기록 자체가 데이터이므로 커밋은 계속한다
-        continue-on-error: true
-
-      - name: 스냅샷 커밋
+      - name: 30분 간격 반복 수집
+        env:
+          # 30분 슬롯 × 11회 ≈ 5.5시간. 잡 상한 6시간 안에 반드시 끝나야
+          # 마지막 커밋이 유실되지 않는다.
+          ITERATIONS: "11"
         run: |
+          set -u
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data
-          if git diff --staged --quiet; then
-            echo "변경 없음 — 커밋 생략"
-            exit 0
-          fi
-          SLOT=$(node -e "console.log(require('./data/latest.json').slot)")
-          git commit -m "chore(data): 수집 스냅샷 ${SLOT}"
-          # 다른 실행이 먼저 push 했을 수 있으므로 rebase 후 재시도
-          for i in 1 2 3; do
-            git pull --rebase --autostash origin "${GITHUB_REF_NAME}" && git push && exit 0
-            echo "push 재시도 $i"
-            sleep 5
+
+          commit_snapshot() {
+            git add data
+            if git diff --staged --quiet; then
+              echo "변경 없음 — 커밋 생략"
+              return 0
+            fi
+            SLOT=$(node -e "console.log(require('./data/latest.json').slot)")
+            git commit -m "chore(data): 수집 스냅샷 ${SLOT}"
+            # 다른 실행이 먼저 push 했을 수 있으므로 rebase 후 재시도
+            for i in 1 2 3; do
+              if git pull --rebase --autostash origin "${GITHUB_REF_NAME}" && git push; then
+                return 0
+              fi
+              echo "push 재시도 $i"
+              sleep 5
+            done
+            echo "::warning::push 실패 — 다음 회차에서 다시 시도한다"
+            return 0
+          }
+
+          # 다음 30분 경계(:00/:30) + 60초까지 대기.
+          # 고정 sleep 1800 은 매 회차 실행시간만큼 뒤로 밀려 결국 두 수집이 같은 슬롯에
+          # 들어간다(slotOf 는 분을 :00/:30 으로 내림). 경계 기준으로 재계산해 드리프트를 없앤다.
+          # +60초는 경계 직전에 깨어나 이전 슬롯으로 잘못 분류되는 것을 막는 여유다.
+          sleep_to_next_slot() {
+            now=$(date +%s)
+            next=$(( (now / 1800 + 1) * 1800 + 60 ))
+            echo "다음 수집까지 $(( next - now ))초 대기 ($(date -u -d "@${next}" '+%H:%M:%S UTC'))"
+            sleep $(( next - now ))
+          }
+
+          for n in $(seq 1 "${ITERATIONS}"); do
+            echo "───── 수집 ${n}/${ITERATIONS} ($(date -u '+%Y-%m-%d %H:%M:%S UTC')) ─────"
+            # 전 소스 실패 시 exit 1 이지만, 상태 기록 자체가 데이터이므로 커밋은 계속한다.
+            # 한 회차가 실패해도 체인을 끊지 않는다.
+            node collector/collect.js || echo "::warning::수집 ${n} 회차 실패 — 상태만 기록한다"
+            commit_snapshot
+            if [ "${n}" -lt "${ITERATIONS}" ]; then
+              sleep_to_next_slot
+            fi
           done
-          exit 1
+
+          echo "체인 종료 — 대기 중인 예약 실행이 이어받는다"
