@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-26T14:01:32.209Z",
+  "generatedAt": "2026-11-26T14:31:23.747Z",
   "windowDays": 7,
   "fromDay": "2026-11-20",
   "toDay": "2026-11-26",
@@ -12,7 +12,7 @@
     "2026-11-25",
     "2026-11-26"
   ],
-  "snapshotCount": 203,
+  "snapshotCount": 204,
   "keywordCount": 120,
   "exposureDefinition": "(스냅샷 × 해당 키워드를 포함한 글) 의 합. 같은 글이 여러 슬롯에 걸려 있으면 중복 계산된다 — 노출 지속량이며 고유 글 수가 아니다.",
   "keywords": [
@@ -31,12 +31,12 @@
     },
     {
       "w": "한국",
-      "exposure": 695,
-      "slots": 168,
+      "exposure": 701,
+      "slots": 169,
       "communities": {
-        "ruliweb": 83,
-        "inven": 84,
-        "dc_realestate": 236,
+        "ruliweb": 85,
+        "inven": 86,
+        "dc_realestate": 238,
         "dc_stock": 166,
         "clien": 91,
         "humoruniv": 35
@@ -44,12 +44,12 @@
     },
     {
       "w": "주식",
-      "exposure": 672,
-      "slots": 154,
+      "exposure": 674,
+      "slots": 155,
       "communities": {
         "clien": 204,
-        "dc_realestate": 264,
-        "dc_stock": 29,
+        "dc_realestate": 265,
+        "dc_stock": 30,
         "inven": 63,
         "ruliweb": 93,
         "humoruniv": 19
@@ -57,11 +57,11 @@
     },
     {
       "w": "부동산",
-      "exposure": 664,
-      "slots": 162,
+      "exposure": 667,
+      "slots": 163,
       "communities": {
-        "dc_realestate": 588,
-        "clien": 69,
+        "dc_realestate": 590,
+        "clien": 70,
         "dc_stock": 3,
         "inven": 4
       }
@@ -90,10 +90,10 @@
     },
     {
       "w": "일본",
-      "exposure": 428,
-      "slots": 139,
+      "exposure": 429,
+      "slots": 140,
       "communities": {
-        "ruliweb": 108,
+        "ruliweb": 109,
         "dc_realestate": 100,
         "clien": 21,
         "humoruniv": 61,
@@ -103,15 +103,28 @@
     },
     {
       "w": "아파트",
-      "exposure": 381,
-      "slots": 126,
+      "exposure": 387,
+      "slots": 127,
       "communities": {
         "humoruniv": 16,
-        "dc_realestate": 284,
+        "dc_realestate": 290,
         "clien": 41,
         "ruliweb": 8,
         "dc_stock": 23,
         "inven": 9
+      }
+    },
+    {
+      "w": "미국",
+      "exposure": 367,
+      "slots": 119,
+      "communities": {
+        "clien": 74,
+        "humoruniv": 18,
+        "dc_stock": 29,
+        "dc_realestate": 142,
+        "inven": 52,
+        "ruliweb": 52
       }
     },
     {
@@ -141,27 +154,26 @@
       }
     },
     {
-      "w": "미국",
-      "exposure": 362,
-      "slots": 118,
+      "w": "이재명",
+      "exposure": 348,
+      "slots": 101,
       "communities": {
-        "clien": 73,
-        "humoruniv": 18,
-        "dc_stock": 29,
-        "dc_realestate": 140,
-        "inven": 51,
-        "ruliweb": 51
+        "dc_realestate": 201,
+        "clien": 84,
+        "inven": 61,
+        "dc_stock": 2
       }
     },
     {
-      "w": "이재명",
-      "exposure": 342,
-      "slots": 100,
+      "w": "서울",
+      "exposure": 336,
+      "slots": 88,
       "communities": {
-        "dc_realestate": 197,
-        "clien": 84,
-        "inven": 60,
-        "dc_stock": 1
+        "dc_realestate": 249,
+        "ruliweb": 5,
+        "clien": 25,
+        "inven": 55,
+        "dc_stock": 2
       }
     },
     {
@@ -178,15 +190,15 @@
       }
     },
     {
-      "w": "서울",
-      "exposure": 333,
-      "slots": 87,
+      "w": "대통령",
+      "exposure": 329,
+      "slots": 111,
       "communities": {
-        "dc_realestate": 248,
-        "ruliweb": 5,
-        "clien": 25,
-        "inven": 53,
-        "dc_stock": 2
+        "clien": 144,
+        "inven": 115,
+        "dc_realestate": 57,
+        "ruliweb": 1,
+        "dc_stock": 12
       }
     },
     {
@@ -203,18 +215,6 @@
       }
     },
     {
-      "w": "대통령",
-      "exposure": 323,
-      "slots": 110,
-      "communities": {
-        "clien": 143,
-        "inven": 115,
-        "dc_realestate": 54,
-        "ruliweb": 1,
-        "dc_stock": 10
-      }
-    },
-    {
       "w": "주갤",
       "exposure": 320,
       "slots": 102,
@@ -224,13 +224,13 @@
     },
     {
       "w": "여자",
-      "exposure": 299,
-      "slots": 107,
+      "exposure": 302,
+      "slots": 108,
       "communities": {
         "ruliweb": 27,
-        "dc_stock": 172,
-        "dc_realestate": 16,
-        "inven": 66,
+        "dc_stock": 173,
+        "dc_realestate": 17,
+        "inven": 67,
         "humoruniv": 14,
         "clien": 4
       }
@@ -250,12 +250,12 @@
     },
     {
       "w": "남자",
-      "exposure": 275,
-      "slots": 93,
+      "exposure": 277,
+      "slots": 94,
       "communities": {
         "dc_stock": 143,
         "dc_realestate": 8,
-        "ruliweb": 34,
+        "ruliweb": 36,
         "inven": 51,
         "humoruniv": 39
       }
@@ -272,12 +272,12 @@
     },
     {
       "w": "중국",
-      "exposure": 263,
-      "slots": 102,
+      "exposure": 266,
+      "slots": 103,
       "communities": {
         "ruliweb": 55,
         "dc_realestate": 81,
-        "inven": 65,
+        "inven": 68,
         "dc_stock": 27,
         "humoruniv": 6,
         "clien": 29
@@ -469,22 +469,23 @@
       }
     },
     {
+      "w": "금리",
+      "exposure": 159,
+      "slots": 50,
+      "communities": {
+        "dc_stock": 6,
+        "dc_realestate": 128,
+        "clien": 23,
+        "ruliweb": 1,
+        "inven": 1
+      }
+    },
+    {
       "w": "한녀들",
       "exposure": 159,
       "slots": 57,
       "communities": {
         "dc_stock": 159
-      }
-    },
-    {
-      "w": "금리",
-      "exposure": 156,
-      "slots": 49,
-      "communities": {
-        "dc_stock": 5,
-        "dc_realestate": 128,
-        "clien": 22,
-        "ruliweb": 1
       }
     },
     {
@@ -538,6 +539,19 @@
       }
     },
     {
+      "w": "영상",
+      "exposure": 145,
+      "slots": 65,
+      "communities": {
+        "ruliweb": 25,
+        "clien": 23,
+        "inven": 64,
+        "dc_realestate": 18,
+        "humoruniv": 10,
+        "dc_stock": 5
+      }
+    },
+    {
       "w": "11월",
       "exposure": 144,
       "slots": 54,
@@ -566,19 +580,6 @@
       "slots": 34,
       "communities": {
         "dc_realestate": 144
-      }
-    },
-    {
-      "w": "영상",
-      "exposure": 143,
-      "slots": 64,
-      "communities": {
-        "ruliweb": 25,
-        "clien": 22,
-        "inven": 64,
-        "dc_realestate": 18,
-        "humoruniv": 10,
-        "dc_stock": 4
       }
     },
     {
@@ -839,14 +840,26 @@
     },
     {
       "w": "문제",
-      "exposure": 98,
-      "slots": 49,
+      "exposure": 100,
+      "slots": 50,
       "communities": {
-        "ruliweb": 25,
+        "ruliweb": 26,
         "inven": 26,
         "clien": 18,
-        "dc_realestate": 23,
+        "dc_realestate": 24,
         "dc_stock": 6
+      }
+    },
+    {
+      "w": "가격",
+      "exposure": 99,
+      "slots": 44,
+      "communities": {
+        "clien": 20,
+        "dc_realestate": 54,
+        "ruliweb": 7,
+        "humoruniv": 4,
+        "inven": 14
       }
     },
     {
@@ -860,18 +873,6 @@
         "inven": 11,
         "humoruniv": 5,
         "ruliweb": 1
-      }
-    },
-    {
-      "w": "가격",
-      "exposure": 97,
-      "slots": 43,
-      "communities": {
-        "clien": 20,
-        "dc_realestate": 52,
-        "ruliweb": 7,
-        "humoruniv": 4,
-        "inven": 14
       }
     },
     {
@@ -1088,6 +1089,17 @@
       }
     },
     {
+      "w": "영화",
+      "exposure": 84,
+      "slots": 42,
+      "communities": {
+        "ruliweb": 28,
+        "humoruniv": 6,
+        "inven": 12,
+        "clien": 38
+      }
+    },
+    {
       "w": "김민석",
       "exposure": 84,
       "slots": 36,
@@ -1145,22 +1157,23 @@
       }
     },
     {
-      "w": "영화",
-      "exposure": 81,
-      "slots": 41,
-      "communities": {
-        "ruliweb": 27,
-        "humoruniv": 6,
-        "inven": 11,
-        "clien": 37
-      }
-    },
-    {
       "w": "보유세",
       "exposure": 81,
       "slots": 25,
       "communities": {
         "dc_realestate": 81
+      }
+    },
+    {
+      "w": "의외",
+      "exposure": 80,
+      "slots": 43,
+      "communities": {
+        "ruliweb": 57,
+        "humoruniv": 12,
+        "clien": 3,
+        "dc_realestate": 2,
+        "inven": 6
       }
     },
     {
@@ -1196,18 +1209,6 @@
       "communities": {
         "dc_stock": 78,
         "dc_realestate": 1
-      }
-    },
-    {
-      "w": "의외",
-      "exposure": 79,
-      "slots": 42,
-      "communities": {
-        "ruliweb": 56,
-        "humoruniv": 12,
-        "clien": 3,
-        "dc_realestate": 2,
-        "inven": 6
       }
     },
     {
@@ -1339,14 +1340,14 @@
       }
     },
     {
-      "w": "증명",
+      "w": "경기",
       "exposure": 70,
-      "slots": 30,
+      "slots": 39,
       "communities": {
-        "clien": 46,
-        "inven": 13,
-        "ruliweb": 10,
-        "humoruniv": 1
+        "clien": 19,
+        "dc_realestate": 45,
+        "ruliweb": 1,
+        "inven": 5
       }
     }
   ]
